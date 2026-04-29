@@ -64,7 +64,17 @@ label {
 <div id="menu" style="width:100%;z-index:5;opacity:1;background-color:white;" onwheel="event.preventDefault()">
 <span id="scanName" style="color:rgb(192,0,255);text-decoration:underline">скан: нет скана</span>
 &nbsp;&nbsp;&nbsp;<span id="frltContent" style="color:rgb(192,0,255);"></span>
-&nbsp;&nbsp;&nbsp;<button id="writeSequenceBtn" style="color:rgb(192,0,255);">Задать последовательность</button>
+&nbsp;&nbsp;&nbsp;<button id="writeSequenceBtn" style="color:rgb(192,0,255);">Начать запись</button>
+&nbsp;&nbsp;&nbsp;<button id="startAnimationBtn" style="color:rgb(192,0,255);">Запустить анимацию</button>
+&nbsp;&nbsp;&nbsp;<button id="accelerateBtn" style="color:rgb(192,0,255);">Ускорить</button>
+&nbsp;&nbsp;&nbsp;<button id="reduceBtn" style="color:rgb(192,0,255);">Замедлить</button>
+<!--
+&nbsp;&nbsp;&nbsp;<button id="diminishOpacityBtn" style="color:rgb(192,0,255);">Прозрачность +</button>
+&nbsp;&nbsp;&nbsp;<button id="increaseOpacityBtn" style="color:rgb(192,0,255);">Прозрачность -</button>
+
+<label for="imgOpcty">Прозрачность рисунков:</label>
+<input type="range" id="imgOpcty" name="imgOpcty" min="0" max="100" value="100" style="left:70%;top:5%;width:25%;height:5%">
+-->
 <br>
 <span class="btn" id="loadScanBtn" style="color:#90f;">Загрузить скан</span>
 <span class="btn" id="loadTransBtn" style="color:#90f">Загрузить транскрипцию</span>
@@ -106,6 +116,9 @@ background-color:rgb(220,220,220);
 overflow:auto;resize:both;font-weight:bold;font-family:Arial;z-Index:2;padding:5px;">
 <label for="opcty">Прозрачность кальки:</label>
 <input type="range" id="opcty" name="opcty" min="0" max="100" value="100" style="left:10%;top:5%;width:25%;height:5%">
+
+<label for="imgOpcty">Прозрачность рисунков:</label>
+<input type="range" id="imgOpcty" name="imgOpcty" min="0" max="100" value="50" style="left:70%;top:5%;width:25%;height:5%">
 
 <div id="frameProps" style="position:absolute;left:15px;padding:5px;border-width:0">
 <label>
@@ -184,7 +197,10 @@ var frameProps, borderVisibility, frameHeight, asPrev, fontHeight, fontAsPrev, s
 var selectPhiRange, allPhi, nearHor, nearVert, curPhi,scanName=gi("scanName"),tooltip=gi("tooltip"),markConjectures=0;  
 var tempDiv=document.createElement("div");
 var transparencyFlag=0, frltContent=gi("frltContent"), animationFlag=0, animationDelay=30,
-writeSequenceBtn=gi("writeSequenceBtn"), writeSequenceFlag=0, curOrdNo=-1;
+writeSequenceBtn=gi("writeSequenceBtn"), writeSequenceFlag=0, curOrdNo=0;
+var startAnimationBtn=gi("startAnimationBtn"),accelerateBtn=gi("accelerateBtn"),reduceBtn=gi("reduceBtn"),
+diminishOpacityBtn=gi("diminishOpacityBtn"), increaseOpacityBtn=gi("increaseOpacityBtn"), 
+imgOpcty=gi("imgOpcty");
 
 
 window.onload=init;
@@ -257,6 +273,12 @@ opcty.addEventListener("input", function(e){
 divScan.style.opacity=opcty.value/100;
 console.log("divScan.style.opacity=",divScan.style.opacity);
 });
+
+imgOpcty.addEventListener("input", function(e){
+for(let j=0;j<framelet2A.length;j++)
+ if(framelet2A[j].img) framelet2A[j].style.opacity=imgOpcty.value/100;
+});
+
 
 applySettings=gi("applySettings");
 applySettings.addEventListener("click",function(e){
@@ -383,9 +405,34 @@ e.target.value="";
 
 //fullWidthBtn=gi("fullWidthBtn");
 //fullWidthBtn.addEventListener("click", changeWidth);
-
-writeSequenceBtn.onclick=
-  "writeSequenceFlag=!writeSequenceFlag;for(let j=0;j<framelet2A.length;j++) framelet2A[j].ordNo=-1;";
+/*
+diminishOpacityBtn.addEventListener("click",function(e){
+for(let j=0;j<framelet2A.length;j++) if(framelet2A[j].img && framelet2A[j].style.opacity>0.05)
+  framelet2A[j].style.opacity-=0.05;
+});
+increaseOpacityBtn.addEventListener("click",function(e){
+for(let j=0;j<framelet2A.length;j++) if(framelet2A[j].img && framelet2A[j].style.opacity<=0.95)
+  framelet2A[j].style.opacity+=0.05;
+});
+*/
+writeSequenceBtn.addEventListener("click", (e)=>{
+  if(writeSequenceBtn.innerHTML=="Начать запись") writeSequenceBtn.innerHTML='Остановить запись';
+  else writeSequenceBtn.innerHTML="Начать запись"
+  writeSequenceFlag=!writeSequenceFlag;
+  if(!writeSequenceFlag) return;
+  for(let j=0;j<framelet2A.length;j++) framelet2A[j].ordNo=-1;
+  });
+startAnimationBtn.addEventListener("click",(e)=>{
+if(startAnimationBtn.innerHTML=="Остановить анимацию") {
+  startAnimationBtn.innerHTML="Запустить анимацию"; animationDelay=100000;return;
+  }
+else {startAnimationBtn.innerHTML="Остановить анимацию";console.log("startAnimationBtn.innerHTML=",startAnimationBtn.innerHTML);}
+animationDelay=30;
+let tF=framelet2A.filter(x=>x.ordNo!=-1).sort((x,y)=>x.ordNo-y.ordNo);
+animate(tF);
+});  
+reduceBtn.addEventListener("click",(e)=>{animationDelay+=5;});  
+accelerateBtn.addEventListener("click",(e)=>{if(animationFlag) {if(animationDelay>5)animationDelay-=5;}});  
 divScan.addEventListener("wheel", scaleElt);
 divTrans.addEventListener("wheel", scaleElt);
 divTrans.addEventListener("click", writeSeq);
@@ -649,6 +696,13 @@ document.addEventListener("keydown", (e)=>{
 
 function clickHandler(e) {
  //console.log("clickHandler: e.target.id=",e.target.id,", Ed.style.display=",Ed.style.display)
+ if(writeSequenceFlag && (e.target.className=="fp" || e.target.className=="frameletClass")) {
+ let t;
+ if(e.target.className=="fp") t=e.target.parentNode;else t=e.target;
+ curOrdNo++;
+ t.ordNo=curOrdNo;
+ console.log("writeSequence: id=",t.id,", ordNo=", curOrdNo); 
+ return;}
  if(!e.shiftKey || (e.target!=divScan && e.target!=div0ForScanFrag && e.currentTarget!=div0ForScanFrag)) return;
  if(Ed.style.display=="block") fitBtnClick();
  //console.log("clickHandler: after fitBtnClick");
@@ -1669,6 +1723,8 @@ function saveTrans() {
 	   
 	   frameletA[j].dSw=divScan.style.width;
 	   frameletA[j].dSh=divScan.style.height;
+	   if(frameletA[j].img) { frameletA[j].style.zIndex=0; framelet2A[j].style.zIndex=0;}
+	   else {frameletA[j].style.zIndex=1; framelet2A[j].style.zIndex=1;}
 	 }
    if(json) console.log("before stringify: json.length=",json.length);	 
    json = JSON.stringify(frameletA);
@@ -1749,9 +1805,14 @@ framelet2.p.style.transformOrigin="left top";
 framelet.p.scaleX=1; framelet.p.scaleY=1;
 framelet2.p.scaleX=1; framelet2.p.scaleY=1;
    
+if(hideBtn.textContent=="Показать кальку") framelet.p.style.display="none";
+else framelet.p.style.display="block";
 }
 
 function fillTrans() {
+hideBtn.textContent="Скрыть кальку";
+stopLaserBtn.innerHTML="Включить лазерную указку";
+laser.style.display="none";
 frameletA.splice(0, frameletA.length);
 framelet2A.splice(0, framelet2A.length);
 let dSw=undefined, dSh=undefined;
@@ -1850,6 +1911,9 @@ for(let j=0; j<json.length; j++) {
    framelet.img=json[j].img;
    framelet2.img=json[j].img;
    
+   if(framelet.img) {framelet.style.zIndex=0;framelet2.style.zIndex=0;}
+   else {framelet.style.zIndex=1;framelet2.style.zIndex=1;}
+   
    if(framelet.img) setBg(framelet2);
    /*
    fit(framelet,framelet.p); fit(framelet2,framelet2.p);
@@ -1870,6 +1934,7 @@ for(let j=0; j<json.length; j++) {
    //fit(framelet,framelet.p); fit(framelet2,framelet2.p);
    resizeText(framelet,framelet.p); resizeText(framelet2,framelet2.p);
    //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+   framelet.style.opacity=1;framelet2.style.opacity=1;
 }
 }
 //console.log("fillTrans ended. divTrans.childNodes.length=", divTrans.childNodes.length);
@@ -2516,16 +2581,16 @@ function delayAsync(dt) {
   return new Promise(resolve => setTimeout(resolve, dt));
 }
 //async 
-function animationStep(i,j,tA){
+function animationStep(i,j,tA,tF){
 console.log("animationStep: i=", i, ', j=', j, ", animationDelay=", animationDelay);
 if(j==0) {if(i>0)frameletA[i-1].style.borderColor="transparent";frameletA[i].style.border="1px solid red";}
 
 tA[i].style.left=parseFloat(tA[i].style.left)+1+"px";
 tA[i].style.width=parseFloat(tA[i].style.width)-1+"px";
 if(j==tA[i].tOldWidth) 
-	   framelet2A[i].p.innerHTML=framelet2A[i].p.innerHTML.replaceAll("||","text-decoration: line-through;");
+	   tF[i].p.innerHTML=tF[i].p.innerHTML.replaceAll("||","text-decoration: line-through;");
 if(j<tA[i].tOldWidth)j++;
-else {if(i<framelet2A.length-1){i++;j=0;}
+else {if(i<tF.length-1){i++;j=0;}
       else 
         {animationFlag=0; return;
 	    }
@@ -2534,17 +2599,18 @@ divTrans.style.transformOrigin="center center";
 if(!divTrans.scale) divTrans.scale=1;	
 //if(Math.abs(framelet2A[i].phi)>60) 
 //  divTrans.style.transform="scale("+divTrans.scale+") rotate(" + parseInt(-framelet2A[i].phi) + "deg)"; 	 
-setTimeout(()=>animationStep(i,j,tA),animationDelay);
+setTimeout(()=>animationStep(i,j,tA,tF),animationDelay);
 }
-function animate(){
+function animate(tF){
 let i,j,k,d,ds,f,fs,tA=[],s=0;
 animationFlag=1;
 console.log("animate started");
-for(let i=0;i<framelet2A.length;i++) {
+if(!tF) tF=framelet2A;
+for(let i=0;i<tF.length;i++) {
   tA[i]=document.createElement("div"); 
-  tA[i].tOldWidth=framelet2A[i].offsetWidth;
+  tA[i].tOldWidth=tF[i].offsetWidth;
   	
-  d=tA[i];ds=d.style;f=framelet2A[i];fs=f.style;
+  d=tA[i];ds=d.style;f=tF[i];fs=f.style;
   ds.left=0;ds.top=0;ds.width=fs.width;ds.height=fs.height;ds.backgroundColor="white";ds.opacity=1;
   ds.position="absolute";
   ds.boxSizing="borderBox";
@@ -2557,24 +2623,8 @@ for(let i=0;i<framelet2A.length;i++) {
   
   }
 
-animationStep(0,0,tA);
-/*
-  for(let i=0;i<framelet2A.length;i++){
-  for(let j=0;j<=tA[i].tOldWidth;j++) {
-    setTimeout(()=>{
-     //console.log("function for Timeout: i=",i,", tA[i].parentNode.style.left=",tA[i].parentNode.style.left,
-	 // ", date=", Date());
-     if(j==0) {if(i>0)frameletA[i-1].style.borderColor="transparent";frameletA[i].style.border="1px solid red";}
-	 tA[i].style.left=parseFloat(tA[i].style.left)+1+"px";
-     tA[i].style.width=parseFloat(tA[i].style.width)-1+"px";
-	 if(j==tA[i].tOldWidth) {
-	   framelet2A[i].p.innerHTML=framelet2A[i].p.innerHTML.replaceAll("||","text-decoration: line-through;");
-	 console.log("reverse transformation, i=",i,", innerHTML=",framelet2A[i].p.innerHTML);  
-	 }
-  },s+=animationDelay); //s*30);
-}
-}
-*/
+animationStep(0,0,tA,tF);
+
 }  
 
 function fitBtnClick(){
@@ -2673,6 +2723,7 @@ const sh = framelet2.offsetTop;
 
 // Вырезаем фрагмент с помощью canvas
 const canvas = document.createElement('canvas');
+canvas.style.zIndex=0;
 canvas.width = sw;
 canvas.height = sh;
 const ctx = canvas.getContext('2d');
@@ -2690,6 +2741,7 @@ ctx.drawImage(
 const dataURL = canvas.toDataURL();
 framelet2.style.backgroundImage = `url(${dataURL})`;
 framelet.img=1; framelet2.img=1;
+framelet.style.opacity=0.5;framelet2.style.opacity=0.5;
 }
 
 function setTempDivBg(){
