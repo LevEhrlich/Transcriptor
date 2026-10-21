@@ -1,0 +1,2819 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {margin:0;padding:0;}
+div {position:absolute;//border:2px solid blue;box-sizing:border-box;
+}
+p {position:absolute;font-size:20px;}
+.btn {padding: 0px; border-radius: 0px; margin:5px;display:inline-block;float:none;font-weight:normal;
+ border-width:0;}
+.gridLineH, .gridLineV {position:absolute; background-color:rgb(255,0,220);}
+.gridLineH {width:100%;height:1px;}
+.gridLineV {width:1px;height:100%;} 
+.edBtn {position:absolute;border:2px solid black;border-radius:5px;box-sizing:border-box;background-color:white;
+		display:flex;justify-content:center;
+		color:black;font-size:20px;font-family:Arial;font-weight:bold;padding:3px}
+.fp {padding:0;margin:0;display:inline-block;white-space:nowrap;
+//overflow:hidden;text-overflow:clip;
+font-family:Arial; 
+//font-family:Times New Roman, serif;
+//font-family:Courier New;
+font-weight:normal;font-size:14px;position:absolute;left:0;top:0;
+//height:100%;
+box-sizing:content-box;
+//width:100%;height:100%;
+transform-origin:left top;}
+
+
+//.ed {position:absolute;border:2px solid black;border-radius:5px;background-color:white;color:black; //rgb(92,0,255);
+//    margin:2px;width:10%;height:7%;font-size:20px;font-weight:bold;
+//	display: flex; justify-content: center;}
+.frameletClass {position:absolute;border-radius:3px;border-style:solid; border-color:blue;border-width:0;//display:flex;
+  padding:0px;margin:0;
+   box-sizing:content-box;//overflow:hidden;
+   z-Index:0;
+   transform-origin:left top;
+   }
+
+//.frameletClass::before {content:"";position:"absolute";inset:0;border:1px solid blue;}
+
+#fr {position:absolute;width:100%;height:100%;left:0;top:0;border:2px solid blue}
+#menu {height:2em;width:100%;top:0;padding:10px; font-family: Arial; font-size:20px;
+       overflow:auto;border:2px solid blue;box-sizing:border-box;}
+#scan,#trans {width:50%;height:88%;top:12%;overflow:hidden;}
+#scan {background:rgb(227,203,157)}
+#trans {background: white}
+#ed {position:absolute;border:2px solid black;border-radius:5%;resize:both;overflow:auto;}
+input[type="radio"] {
+  margin-right: 10px;  /* Отступ справа от радиокнопки */
+}
+
+label {
+  display: block;  /* Каждая радиокнопка на новой строке */
+  margin-bottom: 10px;  /* Отступ между кнопками */
+  font-size:14px;font-family:Arial;font-weight:bold;
+}
+/*
+#imgScan {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  //object-fit: contain;
+}
+*/
+</style>
+</head>
+<body>
+
+<input type="file" id="loadFileInp" accept="image/*" style="display:none">
+<input type="file" id="loadFileWithTransInp" accept=".json" style="display:none">
+
+<div id="fr" style="overflow:hidden">
+<div id="menu" style="width:100%;z-index:7;opacity:1;background-color:white;" onwheel="event.preventDefault()">
+<span id="scanName" style="color:rgb(192,0,255);text-decoration:underline">скан: нет скана</span>
+&nbsp;&nbsp;&nbsp;<span id="frltContent" style="color:rgb(128,0,255);background-color:aqua;"></span>
+&nbsp;&nbsp;&nbsp;<button id="writeSequenceBtn" style="color:rgb(192,0,255);">Начать запись</button>
+&nbsp;&nbsp;&nbsp;<button id="startAnimationBtn" style="color:rgb(192,0,255);">Запустить анимацию</button>
+&nbsp;&nbsp;&nbsp;<button id="accelerateBtn" style="color:rgb(192,0,255);">Ускорить</button>
+&nbsp;&nbsp;&nbsp;<button id="reduceBtn" style="color:rgb(192,0,255);">Замедлить</button>
+
+<br>
+<span class="btn" id="loadScanBtn" style="color:#90f;">Загрузить скан</span>
+<span class="btn" id="loadTransBtn" style="color:#90f">Загрузить транскрипцию</span>
+<span class="btn" id="saveTransBtn" style="color:green">Сохранить транскрипцию</span>
+<span class="btn" id="clearTransBtn" style="color:red">Удалить транскрипцию</span>
+<span class="btn" id="hideBtn" style="color:gray">Скрыть кальку</span>
+
+<span class="btn" id="rotateRightBtn" style="color:#90f">Повернуть вправо</span>
+<span class="btn" id="rotateLeftBtn" style="color:#90f">Повернуть влево</span>
+<!--
+<span class="btn" id="exportToJPGBtn" style="color:#90f">Экспортировать в JPEG</span>
+-->
+<span class="btn" id="stopLaserBtn" style="color:#90f">Включить лазерную указку</span>
+<!-- <span class="btn" id="fullWidthBtn" style="color:#90f">Во всю ширину</span> -->
+<span class="btn" id="settingsBtn" style="color:#90f">Настройки</span>
+</div>
+
+<div id="divScan" style="width:48%;height:87%;left:1%;top:12%;opacity:1;z-Index:1;
+	   border:2px solid blue;box-sizing:border-box;">
+         <img id="imgScan" 
+		 style="left:0;top:0;pointer-events:none;z-Index:0;position:relative;"> 
+</div>      
+
+<div id="divTrans" style="width:48%;height:87%;left:50%;top:12%;background-color:white;
+	 border:2px solid blue;box-sizing:border-box;">
+     </div>
+     <div id="tooltip" 
+       style="left:1%;top:85%;width:98%;height:14%;padding:5px;
+	   border:2px solid green; background-color:#fff2e1;overflow:auto;opacity:1;display:none;">
+     </div>
+
+</div>
+
+<div id="divSettings" style="position:absolute;border:2px solid black;border-radius:7px;display:none;
+left:5%;top:5%;width:50%;height:70%;
+background-color:rgb(220,220,220);
+overflow:auto;resize:both;font-weight:bold;font-family:Arial;z-Index:2;padding:5px;">
+<label for="opcty">Прозрачность кальки:</label>
+<input type="range" id="opcty" name="opcty" min="0" max="100" value="100" style="left:10%;top:5%;width:25%;height:5%">
+
+<label for="imgOpcty">Прозрачность рисунков:</label>
+<input type="range" id="imgOpcty" name="imgOpcty" min="0" max="100" value="50" style="left:70%;top:5%;width:25%;height:5%">
+
+<div id="frameProps" style="position:absolute;left:15px;padding:5px;border-width:0">
+<label>
+<input type="radio" name="borderVisibility" value="always">
+Всегда показывать рамки
+</label>
+<label>
+<input type="radio" name="borderVisibility" value="focused" checked>
+Только при наведении мышки
+</label>
+<label>
+<input type="radio" name="borderVisibility" value="editing">
+Только при редактировании
+</label>
+
+<label>
+Задать начальную высоту рамки
+<input type="text" id="frameHeight" name="frameHeight" value="25" style="width:40px">
+</label>
+<label>
+<input type="checkbox" id="asPrev" name="asPrev" checked>
+Устанавливать высоту рамки, как у предыдущей
+</label>
+
+<label>
+Задать начальную высоту шрифта
+<input type="text" id="fontHeight" name="fontHeight" value="1" style="width:40px">
+</label>
+<label>
+<input type="checkbox" id="fontAsPrev" name="fontAsPrev" checked>
+Устанавливать высоту шрифта, как в предыдущей рамке
+</label>
+
+<label>
+<input type="radio" id="selectPhiRange" name="selectPhiRange" value="allPhi" checked>
+Показывать все строки транскрипции
+</label>
+<label>
+<input type="radio" name="selectPhiRange" value="nearHor">
+Показывать только строки, отклоняющиеся от горизонтали не более, чем на 60 град.
+</label>
+<label>
+<input type="radio" name="selectPhiRange" value="nearVert">
+Показывать только строки, отклоняющиеся от горизонтали более, чем на 60 град.
+</label>
+
+</div>
+<div id="applySettings" class="ed" 
+  style="padding:3px;right:5%;bottom:5%;border:2px solid black;border-radius:5px;cursor:default;">Закрыть
+</div>
+</div>
+<div id="laser" style="position:absolute;display:none;width:4px;height:4px;border:2px solid red;
+  border-radius:2px;background-color:red;box-sizing:borderbox;z-Index:10"></div>
+<script>
+"use strict";
+var gi=function(id){return document.getElementById(id)}, pF=parseFloat, pI=parseInt,
+W,H,fr, menu, spans, ed, scan, trans, divScan, imgScan, divTrans, loadFileInp, loadFileWithTransInp;
+var loadScanBtn, loadTransBtn, saveTransBtn,clearTransBtn,hideBtn,rotateRightBtn,rotateLeftBtn,
+exportToJPGBtn,fullWidthBtn,laser,laserFrame=0,settingsBtn,applySettings,opcty;
+var framelet,framelet2,txt,txt2,dash,YLetter,yLetter,ThetaLetter,thetaLetter,whiteSquare,lineThrough,underLine,overLine, 
+ital;
+var black,lightblue,red,bgYellow,bgLightblue;
+var shiftUp,shiftLeft,shiftRight,shiftDown, heightUp,widthLeft,widthRight,heightDown,
+scaleUp,scaleLeft,scaleRight,scaleDown, rotateLeft,rotateRight,weightLeft,weightRight,opacityLeft,opacityRight, apply;
+var trg, json;
+var Ed, btnW, btnH, divForScanFrag, divInnerForScanFrag, canvasForFramelet, ctxF, imgFrag, divForFramelet;
+var frameletA=new Array(), framelet2A=new Array();
+var reader, transcriptFileName, coef;
+var cYLetter=String.fromCharCode(0x48c), cyLetter=String.fromCharCode(0x48d), 
+  cThetaLetter=String.fromCharCode(0x04e8),cthetaLetter=String.fromCharCode(0x04e9), 
+  cIghLetter=String.fromCharCode(0x474), cighLetter=String.fromCharCode(0x475),
+  cdash=String.fromCharCode(0x2014),cwhiteSquare=String.fromCharCode(0x25A1),
+  cshiftUp=String.fromCharCode(9650),cshiftLeft=String.fromCharCode(9668), 
+  cshiftRight=String.fromCharCode(9658),cshiftDown=String.fromCharCode(9660);
+var frameProps, borderVisibility, frameHeight, asPrev, fontHeight, fontAsPrev, sincHeight;  
+var selectPhiRange, allPhi, nearHor, nearVert, curPhi,scanName=gi("scanName"),tooltip=gi("tooltip"),markConjectures=0;  
+var tempDiv=document.createElement("div");
+var transparencyFlag=1, frltContent=gi("frltContent"), animationFlag=0, animationDelay=30,
+writeSequenceBtn=gi("writeSequenceBtn"), writeSequenceFlag=0, curOrdNo=0;
+var startAnimationBtn=gi("startAnimationBtn"),accelerateBtn=gi("accelerateBtn"),reduceBtn=gi("reduceBtn"),
+diminishOpacityBtn=gi("diminishOpacityBtn"), increaseOpacityBtn=gi("increaseOpacityBtn"), 
+imgOpcty=gi("imgOpcty");
+let curElt, mouseX, mouseY,dragFlag, dSw, dSh, divSettings=gi("divSettings");
+let bw1=1/window.devicePixelRatio+'px', dSw0, dSh0, layer;
+
+window.onload=init;
+function init(){
+W=window.innerWidth; H=window.innerHeight;
+btnW=(0.5*W)/12-5; btnH=28;
+loadScanBtn=gi("loadScanBtn");
+loadTransBtn=gi("loadTransBtn");
+loadFileWithTransInp=gi("loadFileWithTransInp");
+saveTransBtn=gi("saveTransBtn");
+clearTransBtn=gi("clearTransBtn");
+hideBtn=gi("hideBtn");
+rotateRightBtn=gi("rotateRightBtn");
+rotateLeftBtn=gi("rotateLeftBtn");
+
+divSettings.style.display="block";
+divSettings.x0=divSettings.getBoundingClientRect().left;
+divSettings.y0=divSettings.getBoundingClientRect().top;
+divSettings.style.display="none";
+divSettings.tx=0;divSettings.ty=0;
+divSettings.curAngle=0;divSettings.prevAngle=0;divSettings.scale=1;divSettings.prevScale=1;
+divSettings.style.transformOrigin="0 0";
+
+document.addEventListener("mousemove",(e)=>{
+//if(curElt) console.log("document.mousemove: curElt.id=",curElt.id,", dragFlag=",dragFlag,
+//  ", curElt.tx,ty=",curElt.tx,curElt.ty);
+mouseX=e.clientX; mouseY=e.clientY;
+if(dragFlag && curElt) {
+curElt.style.cursor="grabbing";
+curElt.tx+=mouseX-curElt.lastX;curElt.ty+=mouseY-curElt.lastY;
+curElt.lastX=mouseX;curElt.lastY=mouseY;
+curElt.style.transform="translate("+curElt.tx+"px,"+curElt.ty+"px) scale(" + curElt.scale+") rotate("+
+curElt.curAngle+"deg)";}
+dragging(e);
+ });	
+
+document.addEventListener("mouseover",(e)=>{
+if(divScan.contains(e.target))curElt=divScan;
+else if(divTrans.contains(e.target)) curElt=divTrans; 
+else if(divSettings.contains(e.target)) curElt=divSettings;
+else if(divInnerForScanFrag.contains(e.target)) curElt=divInnerForScanFrag;
+else if(Ed.contains(e.target)) curElt=Ed;
+
+let f=e.target.closest('.frameletClass'); 
+if(!f) return;
+if(transparencyFlag){
+  if(borderVisibility=="focused"||borderVisibility=="always")
+    {if(f.p.innerHTML.trim()!='') f.style.border=`${bw1} solid blue`; else f.style.border=`${bw1} solid green`; 
+	}
+  else f.style.border=`${bw1} solid transparent`;
+  }
+if(laserFrame) { 
+  let k=frameletA.indexOf(f); if(k==-1) k=framelet2A.indexOf(f);
+  frameletA[k].style.border="1px solid red";
+  framelet2A[k].style.border="1px solid red";
+}
+frltContent.innerText=f.p.innerText;
+//'Нет closest framelet';
+/*
+console.log("mouseover: closest framelet=",i, "tgts=",
+  document.elementsFromPoint(e.clientX,e.clientY).map((it)=>{return it.id?it.id:'no id'}));
+*/
+});
+document.addEventListener('mouseout',(e)=>{
+let f=e.target.closest('.frameletClass');
+if(!f) return;
+if(transparencyFlag){
+if(borderVisibility!="always") f.style.borderColor="transparent";
+  //if(elt==Ed.framelet) e.target.style.border=`${bw1} solid blue`;
+if(borderVisibility=="always" || (Ed.style.display=='block' && Ed.framelet==f)) f.style.border=`${bw1} solid blue`;  
+}
+if(laserFrame){let k; 
+  f.style.border=`${bw1}px solid transparent`;
+  k=frameletA.indexOf(f); if(k==-1) k=framelet2A.indexOf(f); 
+    if(k) { 
+      frameletA[k].style.border=`${bw1}px solid transparent`; framelet2A[k].style.border=`${bw1}px solid transparent`;
+	 }
+  }  
+  frltContent.innerText="";
+});
+
+
+tooltip.addEventListener("mouseleave",(e)=>tooltip.style.display="none");
+laser=gi("laser");
+laser.style.display="none";
+stopLaserBtn.addEventListener("click", function(e) {
+if(e.ctrlKey){if(!laserFrame){
+   laserFrame=1; 
+   stopLaserBtn.innerHTML="Выключить лазерную указку";
+   for(let j=0;j<frameletA.length;j++){
+     if(frameletA[j]) {frameletA[j].style.borderColor="transparent";
+	   if(frameletA[j]==framelet){
+	     //frameletA[j].style.borderWidth="1px";
+		 framelet.style.borderColor="red";
+		 framelet2A[j].style.border=`${bw1}px solid red`;
+		 }
+	 }
+  } 
+ } //Конец обработки включения рамочек
+ else { 
+   laserFrame=0;
+   stopLaserBtn.innerHTML="Включить лазерную указку";
+   for(let j=0;j<frameletA.length;j++) {
+     if(frameletA[j]){framelet2A[j].style.border=`${bw1}px solid transparent`;
+	 if((frameletA[j]==framelet && borderVisibility=="focused")||borderVisibility=="always") 
+	 {frameletA[j].style.border=`${bw1} solid blue`;
+	  frameletA[j].style.setProperty('border-width',`${bw1}`,'important'); 
+	 }
+	 }
+   }
+   }//Конец обработки выключения рамочек
+} //Конец обработки ctrlKey
+else if(laser.style.display=="block") {
+  laser.style.display="none"; stopLaserBtn.innerHTML="Включить лазерную указку";
+  for(let j=0;j<frameletA.length;j++){
+    if(frameletA[j]){
+	frameletA[j].style.pointerEvents="auto";
+	framelet2A[j].style.pointerEvents="auto";
+	}
+   }
+  }
+else {
+  laser.style.display="block"; stopLaserBtn.innerHTML="Выключить лазерную указку";
+  for(let j=0;j<frameletA.length;j++){
+    if(frameletA[j]){
+	frameletA[j].style.pointerEvents="auto";
+	framelet2A[j].style.pointerEvents="auto";
+	}
+	}
+   }
+});
+
+settingsBtn=gi("settingsBtn");
+settingsBtn.addEventListener("click",function(e){
+e.preventDefault();
+divSettings.style.display="block";
+});
+
+opcty=gi("opcty");
+opcty.addEventListener("input", function(e){
+divScan.style.opacity=opcty.value/100;
+//console.log("divScan.style.opacity=",divScan.style.opacity);
+});
+
+imgOpcty.addEventListener("input", function(e){
+for(let j=0;j<framelet2A.length;j++)
+ if(framelet2A[j].img) framelet2A[j].style.opacity=imgOpcty.value/100;
+});
+
+
+applySettings=gi("applySettings");
+applySettings.addEventListener("click",function(e){
+e.preventDefault();
+divSettings.style.display="none";
+//console.log("applySettings click: divSettings.style.display=", divSettings.style.display);
+});
+
+fr=gi("fr");
+fr.style.overflow="hidden";
+
+menu=gi("menu");
+
+menu.addEventListener("mouseenter", function(e){
+  menu.h=menu.style.height;
+  if(menu.scrollHeight>menu.clientHeight) menu.style.height=menu.scrollHeight+"px";
+});
+menu.addEventListener("mouseleave",function(e){
+  menu.style.height=menu.h;
+});
+
+divScan=gi("divScan");divScan.curAngle=0;divScan.prevAngle=0;divScan.scale=1;divScan.prevScale=1;
+  divScan.tx=0;divScan.ty=0;
+divScan.style.left="5px"; divScan.style.width=W/2-7.5+"px";
+divScan.style.top=menu.getBoundingClientRect().bottom+1+"px";
+divScan.style.height=H-pF(divScan.style.top)-5+"px";
+let r=divScan.getBoundingClientRect(); divScan.x0=r.x; divScan.y0=r.y;  
+divScan.style.transformOrigin="0 0";
+
+divTrans=gi("divTrans");divTrans.curAngle=0;divTrans.prevAngle=0;divTrans.scale=1;divTrans.prevScale=1; 
+ divTrans.tx=0;divTrans.ty=0;
+divTrans.style.left=W/2+2.5+"px"; divTrans.style.width=divScan.style.width;
+divTrans.style.top=divScan.style.top; divTrans.style.height=divScan.style.height;
+r=divTrans.getBoundingClientRect(); divTrans.x0=r.x; divTrans.y0=r.y;
+divTrans.style.transformOrigin="0 0";
+
+tempDiv.style.position="absolute";
+tempDiv.style.display="none";
+divTrans.appendChild(tempDiv);
+
+creaEd();
+Ed.style.display="none";
+setHandlersForEdButtons();
+txt.dragFlag=false;
+txt2.dragFlag=false;
+txt.addEventListener("mousemove", function(e){txt.dragFlag=false});
+txt2.addEventListener("mousemove", function(e){txt2.dragFlag=false});
+
+spans=document.getElementsByTagName('span');
+[...spans].forEach(function(el) {
+el.addEventListener("mouseenter", function(e) {
+e.target.style.borderBottom="3px solid red"; 
+});
+el.addEventListener("mouseout", function(e) {
+e.target.style.borderBottomWidth="0"; 
+});
+});
+
+ed=gi("ed");
+loadFileInp=gi("loadFileInp");
+imgScan=gi("imgScan");
+
+//Загрузка скана
+loadScanBtn.addEventListener("click", function(e){
+  loadFileInp.value="";
+  loadFileInp.click(); //loadFileInp.change();
+});
+
+loadFileInp.addEventListener('change', function(event) {
+  //console.log("loadFileInp change, event.target.files.length=",event.target.files.length);
+  const file = event.target.files[0];
+  if(!file) console.log("loadFileInp: file=", file);
+  else console.log("loadFileInp: file=", file);
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imgScan.src = e.target.result;
+      imgScan.style.display = 'block';
+	  e.target.value="";
+	  scanName.innerText="скан: " + file.name;
+    };
+
+  reader.readAsDataURL(file);
+  }
+});
+
+imgScan.onload=function(e){
+/*
+divScan.style.width=window.getComputedStyle(imgScan).width;
+divScan.style.height=window.getComputedStyle(imgScan).height;
+divTrans.style.width=divScan.style.width;
+divTrans.style.height=divScan.style.height;
+*/
+
+divScan.style.aspectRatio=imgScan.naturalWidth/imgScan.naturalHeight;
+divTrans.style.aspectRatio=divScan.style.aspectRatio;
+if(imgScan.naturalWidth>=imgScan.naturalHeight) {
+  divScan.style.height="auto";
+  imgScan.style.width=divScan.style.width;
+  } else {
+   divScan.style.width="auto";
+   imgScan.style.height=divScan.style.height;
+   divScan.scale=1; divScan.prevScale=1; divScan.curAngle=0; divScan.prevAngle=0; divScan.style.transform='';
+   }
+
+   let r=divScan.getBoundingClientRect();
+   dSw=r.width;dSh=r.height;
+   dSw0=dSw;dSh0=dSh;
+} 
+
+/*
+e.target.value="";
+}  
+});
+*/
+writeSequenceBtn.addEventListener("click", (e)=>{
+  if(writeSequenceBtn.innerHTML=="Начать запись") writeSequenceBtn.innerHTML='Остановить запись';
+  else writeSequenceBtn.innerHTML="Начать запись"
+  writeSequenceFlag=!writeSequenceFlag;
+  if(!writeSequenceFlag) return;
+  for(let j=0;j<framelet2A.length;j++) framelet2A[j].ordNo=-1;
+  });
+startAnimationBtn.addEventListener("click",(e)=>{
+if(startAnimationBtn.innerHTML=="Остановить анимацию") {
+  startAnimationBtn.innerHTML="Запустить анимацию"; animationDelay=100000;return;
+  }
+else {startAnimationBtn.innerHTML="Остановить анимацию";console.log("startAnimationBtn.innerHTML=",startAnimationBtn.innerHTML);}
+animationDelay=30;
+let tF=framelet2A.filter(x=>x.ordNo!=-1).sort((x,y)=>x.ordNo-y.ordNo);
+animate(tF);
+});  
+reduceBtn.addEventListener("click",(e)=>{animationDelay+=5;});  
+accelerateBtn.addEventListener("click",(e)=>{if(animationFlag) {if(animationDelay>5)animationDelay-=5;}});  
+divTrans.addEventListener("click", writeSeq);
+
+//Ed.addEventListener("mousedown", startDrag);
+
+//Ed.addEventListener("mouseup",endDrag);
+//Ed.addEventListener("mouseleave",endDrag);
+
+document.addEventListener("mousedown",function(e){
+e.preventDefault(); 
+if(!curElt) return; 
+dragFlag=true; curElt.style.cursor="grab";curElt.lastX=e.clientX;curElt.lastY=e.clientY;
+//console.log("document.mousedown: curElt.id=",curElt.id,", dragFlag=",dragFlag);
+});
+
+document.addEventListener("mouseup",(e)=>{dragFlag=false;if(curElt)curElt.style.cursor="default";});
+
+if(rotateRightBtn) {rotateRightBtn.addEventListener("mousedown", rotateClockWise);
+rotateRightBtn.addEventListener("mouseup", function(e) {
+  clearInterval(divScan.stopRotation);
+});
+rotateRightBtn.addEventListener("mouseleave", function(e) {
+  clearInterval(divScan.stopRotation);
+});
+}
+
+if(rotateLeftBtn){
+rotateLeftBtn.addEventListener("mousedown", rotateCounterClockWise);
+rotateLeftBtn.addEventListener("mouseup", function(e) {
+  clearInterval(divScan.stopRotation);
+});
+rotateLeftBtn.addEventListener("mouseleave", function(e) {
+  clearInterval(divScan.stopRotation);
+});
+}
+
+document.addEventListener("click", clickHandler);
+
+document.addEventListener('dblclick',(e)=>{
+e.preventDefault();
+let f=e.target.closest('.frameletClass');
+if(!f || !divScan.contains(f)) return;
+framelet=e.target.closest('.frameletClass');
+if(!framelet) { alert("dblclick Handler: Не определяется framelet. e.target.id="+e.target.id+", e.currentTarget.id="+e.currentTarget.id+", e.detail="+e.detail); return;}
+Ed.framelet=framelet;
+let k=frameletA.indexOf(framelet);
+if(k==-1) { k=framelet2A.indexOf(framelet); framelet2=framelet; framelet=frameletA[k];}
+else framelet2=framelet2A[k];
+txt.innerHTML=framelet.p.innerHTML; 
+if(framelet.t2) txt2.innerHTML=framelet.t2; else txt2.innerHTML="";
+framelet.style.border=`${bw1} solid blue`;
+startEd();
+});
+
+saveTransBtn.addEventListener("click", saveTrans);
+clearTransBtn.addEventListener("click", function(e) {
+  for(let j=frameletA.length-1;j>=0;j--) {
+    if(frameletA[j] && frameletA[j].parentNode){
+	divScan.removeChild(frameletA[j]);
+	divTrans.removeChild(framelet2A[j]);
+   }
+  }
+frameletA.splice(0, frameletA.length);
+framelet2A.splice(0, framelet2A.length);
+});
+
+loadTransBtn.addEventListener('click', function(e) {
+loadFileWithTransInp.click();
+});
+
+loadFileWithTransInp.addEventListener("change", function(e) {
+const file=e.target.files[0];
+if (file) {
+   //console.log("before new FileReader file=", file.name);
+   transcriptFileName=file.name;
+   reader = new FileReader();
+   reader.onload = function(e) {
+   const content = e.target.result;
+   try {
+         json = JSON.parse(content);
+         //console.log("json=", json);
+		 fillTrans();
+       } catch (error) {
+     console.error('Error parsing JSON:', error);
+       }
+    };
+   reader.readAsText(file);	
+   //delete reader;
+   e.target.value="";
+ }
+});
+
+hideBtn.addEventListener("click", function(e) {
+  if (hideBtn.textContent=="Скрыть кальку") {
+    for(let j=0;j<frameletA.length;j++) if(frameletA[j]) 
+	  frameletA[j].p.style.display="none";
+	hideBtn.textContent="Показать кальку";
+	}
+  else {
+    for(let j=0;j<frameletA.length;j++) if(frameletA[j]) frameletA[j].p.style.display="block";
+	hideBtn.textContent="Скрыть кальку";
+	}
+});
+
+exportToJPGBtn=gi("exportToJPGBtn");
+if(exportToJPGBtn){
+exportToJPGBtn.addEventListener("click", function(e) {
+html2canvas(gi('divTrans')).then(function (canvas) {
+    // Получаем данные изображения в формаPEG
+    var imgData = canvas.toDataURL('image/jpeg');
+
+    // Создаем ссылку и кликаем по ней для загрузки изображения
+    var link = document.createElement('a');
+    link.href = imgData;
+    link.download = 'capture.jpg';
+    link.click();
+   });
+});
+}
+
+setFrameProps();
+document.addEventListener("keydown", (e)=>{ 
+ //console.log("e.altKey=",e.altKey,", e.key=",e.key);
+ if(e.key=="Escape") {
+ if(Ed.style.display=="block")Ed.style.display="none";
+ if(divSettings.style.display=="block")divSettings.style.display="none";
+ }
+ else if(Ed.style.display=="none"){
+   if(e.key=="0") {
+	 divScan.style.display="block"; divTrans.style.display="block";
+	 divScan.scale=dSw0/dSw; divScan.prevScale=divScan.scale;
+	 divTrans.scale=divScan.scale;divTrans.prevScale=divTrans.scale;
+	 divScan.curAngle=0; divScan.prevAngle=0; divTrans.curAngle=0; divTrans.prevAngle=0;
+	 divScan.tx=0;divScan.ty=0;divTrans.tx=0;divTrans.ty=0;
+	 divScan.style.transform="scale(" + divScan.scale+")"; 
+	 divTrans.style.transform=divScan.style.transform;
+	 }
+   else if(e.key=="1") {divScan.style.zIndex=5;divTrans.style.zIndex=4;	  
+	  }
+   else if(e.key=="2") {divScan.style.zIndex=4;divTrans.style.zIndex=5;
+	  }
+   else if(e.key=="3" || e.key=="4") {
+      if(curElt.curAngle==undefined || Ed.style.display!="none") return;
+      curElt.prevAngle=curElt.curAngle;
+      if(e.key=="3") curElt.curAngle+=1;else if(e.key=="4") curElt.curAngle-=1;
+      correctPosition("rot");}
+   else if(e.key=="5"){
+     if(animationFlag) animationDelay+=5;
+	 else { laser.style.width=laser.offsetWidth+2+"px"; laser.style.height=laser.style.width;
+            laser.style.borderRadius=laser.offsetWidth/2+"px";
+		  }
+	}
+   else if(e.key=="6") {
+      if(animationFlag) {if(animationDelay>5)animationDelay-=5;}
+	  else {laser.style.width=laser.offsetWidth-2+"px"; laser.style.height=laser.style.width;
+            laser.style.borderRadius=laser.offsetWidth/2+"px";
+		   }
+	}
+   else if(e.key=="7") {console.log("7 is pressed"); animate();}
+   else if(e.key=="i" || e.key=="ш") {
+     if(framelet2) setBg(framelet2);
+	 
+  } 
+  else if(e.key=="j" || e.key=="о"){
+    
+	for(let j=0;j<frameletA.length;j++) 
+	  if(frameletA[j].img) {frameletA[j].style.zIndex=-1;framelet2A[j].style.zIndex=-1;}
+	}
+  else if(e.key=="8") {
+   for(let j=0;j<frameletA.length;j++) {
+     resizeText(frameletA[j],frameletA[j].p); resizeText(framelet2A[j],framelet2A[j].p);
+	 }
+   }
+  else if(e.key=="9") {
+  if(!markConjectures) {
+    markConjectures=1;
+    for(let j=0;j<framelet2A.length;j++) if(framelet2A[j].t2 && framelet2A[j].t2!="<br>") framelet2A[j].p.style.color="rgb(92,0,255)"
+   } else {
+     markConjectures=0; for(let j=0;j<framelet2A.length;j++) framelet2A[j].p.style.color="black"
+   }
+  }
+  else if((e.key=="d" || e.key=="D" || e.key=="в" || e.key=="В") && framelet2) {e.preventDefault(); 
+    if(tempDiv.style.display=="none") { console.log("d is pressed, framelet2.t=", framelet2.t);
+	tempDiv.style.left=framelet2.offsetLeft-50+"px";
+	tempDiv.style.top=framelet2.offsetTop-50+"px";
+	tempDiv.style.width=framelet2.offsetWidth+100+"px";
+	tempDiv.style.height=framelet2.offsetHeight+100+"px";
+	tempDiv.style.display="block";
+	tempDiv.style.zIndex=10;
+	setTempDivBg();
+    //framelet2.style.
+   } else tempDiv.style.display="none";  
+   }
+  } //Ed.style.display="none"
+  
+  else if(e.ctrlKey && (e.key=="ArrowLeft") && framelet) {
+    e.preventDefault();framelet.style.width=parseFloat(framelet.style.width)-1+"px";
+	framelet2.style.width=framelet.style.width; Ed.frameletForFrag.style.width=framelet.style.width;
+	}
+  else if(e.ctrlKey && (e.key=="ArrowRight") && framelet) {e.preventDefault();framelet.style.width=parseFloat(framelet.style.width)+1+"px";
+  framelet2.style.width=framelet.style.width; Ed.frameletForFrag.style.width=framelet.style.width;
+  }
+  else if(e.ctrlKey && (e.key=="ArrowUp") && framelet) {e.preventDefault();framelet.style.height=parseFloat(framelet.style.height)+1+"px";
+  framelet2.style.height=framelet.style.height; Ed.frameletForFrag.style.height=framelet.style.height;
+  }
+  else if(e.ctrlKey && (e.key=="ArrowDown") && framelet) {e.preventDefault();framelet.style.height=parseFloat(framelet.style.height)-1+"px";
+  framelet2.style.height=framelet.style.height; Ed.frameletForFrag.style.height=framelet.style.height;
+  }  
+  
+  //else 
+  if(e.altKey) { 
+  //console.log("e.altKey=",e.altKey,", e.key=",e.key, ",transparencyFlag=",transparencyFlag);
+  if(e.key==3 && framelet) {e.preventDefault();framelet.phi=framelet.phi+1;
+  framelet.style.transform="rotate("+framelet.phi+"deg)";
+  framelet2.style.transform=framelet.style.transform;
+  Ed.frameletForFrag.style.transform=framelet.style.transform;
+  divInnerForScanFrag.curAngle=-framelet.phi;
+  if(!divInnerForScanFrag.scale)divInnerForScanFrag.scale=1;
+  divInnerForScanFrag.style.transformOrigin=framelet.style.left+" " + framelet.style.top;
+  divInnerForScanFrag.style.transform="scale("+divInnerForScanFrag.scale+") rotate("+divInnerForScanFrag.curAngle+"deg)";
+  }
+	//console.log("phi=",framelet.phi)}
+  else if(e.key==4 && framelet) {e.preventDefault(); framelet.phi-=1;framelet.style.transform=
+     "rotate("+framelet.phi+"deg)";
+	 framelet2.style.transform=framelet.style.transform;
+	 Ed.frameletForFrag.style.transform=framelet.style.transform;
+	 divInnerForScanFrag.curAngle=-framelet.phi;
+     if(!divInnerForScanFrag.scale)divInnerForScanFrag.scale=1;
+     divInnerForScanFrag.style.transformOrigin=framelet.style.left+" " + framelet.style.top;
+     divInnerForScanFrag.style.transform="scale("+divInnerForScanFrag.scale+") rotate("+divInnerForScanFrag.curAngle+"deg)";
+
+	 }
+  //else 
+  if (e.key=="B" || e.key=="b"	|| e.key=="И" || e.key=="и") {
+      console.log("e.altKey=",e.altKey,", e.key=",e.key,", transparencyFlag=",transparencyFlag);
+	  if(!transparencyFlag) {transparencyFlag=1; 
+	    for(let j=0;j<frameletA.length;j++) frameletA[j].style.borderColor="transparent";
+		if(Ed.frameletForFrag) Ed.frameletForFrag.style.borderColor="transparent";
+		}
+	  else {transparencyFlag=0; 
+	    for(let j=0;j<frameletA.length;j++){
+		  //console.log('j=',j,', borderWidth=',frameletA[j].style.borderWidth);
+		  frameletA[j].style.borderStyle='solid'; 
+		  if(!frameletA[j].t || frameletA[j].t.trim()=='') frameletA[j].style.borderColor="green"; 
+		    else frameletA[j].style.borderColor="blue";}
+		if(Ed.frameletForFrag) Ed.frameletForFrag.style.borderColor="blue";
+		}	
+	}  
+   }	 
+});
+} //Конец тела Init
+
+function clickHandler(e) {
+ //console.log("clickHandler: e.target.id=",e.target.id,", Ed.style.display=",Ed.style.display)
+ /*
+ if(writeSequenceFlag && (e.target.className=="fp" || e.target.className=="frameletClass")) {
+ let t;
+ if(e.target.className=="fp") t=e.target.parentNode;else t=e.target;
+ curOrdNo++;
+ t.ordNo=curOrdNo;
+ //console.log("writeSequence: id=",t.id,", ordNo=", curOrdNo); 
+ return;}
+ */
+ //console.log("clickHandler: e.target=",e.target, ", e.shiftKey=",e.shiftKey);
+ //if(!e.shiftKey && Ed.style.display=="none") {
+ //  if(divScan.contains(e.target)) {divScan.style.zIndex=2;divTrans.style.zIndex=1} else
+ //  if(divTrans.contains(e.target)){divScan.style.zIndex=1;divTrans.style.zIndex=2}
+ //  }
+ if(!e.shiftKey || (!divScan.contains(e.target) && e.target!=divInnerForScanFrag && e.target!=divForScanFrag &&
+   e.currentTarget!=divInnerForScanFrag)) return;
+ e.preventDefault();
+ if(Ed.style.display=="block") fitBtnClick();
+ //console.log("clickHandler: after fitBtnClick");
+ if(!e.shiftKey) return;
+ let tgts=document.elementsFromPoint(e.clientX,e.clientY).map(item=>item.id);
+ //console.log("clickHandler: e.clientX=",e.clientX,", e.clientY=",e.clientY, ", tgts.id=",tgts);
+ let localX, localY;
+ if(tgts.includes('divScan')){
+ let P=new DOMPoint(e.clientX-divScan.x0,e.clientY-divScan.y0), m=new DOMMatrix(divScan.style.transform);
+ P=P.matrixTransform(m.inverse());
+ localX=P.x; localY=P.y;
+ //console.log("e.offsetX=",e.offsetX,", localX=", localX, ", e.offsetY=", e.offsetY, "localY=", localY);
+ } else if(tgts.includes('divInnerForScanFrag')) {
+ let P=new DOMPoint(e.clientX-divInnerForScanFrag.x0,e.clientY-divInnerForScanFrag.y0), 
+ m=new DOMMatrix(divInnerForScanFrag.style.transform);
+ P=P.matrixTransform(m.inverse());
+ localX=P.x; localY=P.y;
+ //localX=e.offsetX-divInnerForScanFrag.tx;localY=e.offsetY-divInnerForScanFrag.ty;
+ localX=e.offsetX;localY=e.offsetY;
+ //console.log("divInnerForScanFrag: e.offsetX=",e.offsetX,", localX=", localX, 
+ //  ", e.offsetY=", e.offsetY, "localY=", localY);
+}  
+ 
+ else return;
+ if(!divScan.newFramelet) {
+    divScan.frameletStartX=localX; divScan.frameletStartY=localY; divScan.newFramelet=true;
+ } else {
+   divScan.frameletEndX=localX; divScan.frameletEndY=localY;
+   frameletCreation();
+   
+   //console.log("framelet.id=",framelet.id,"framelet2.id=",framelet2.id);
+   
+   let d=Math.sqrt((divScan.frameletEndX-divScan.frameletStartX)*(divScan.frameletEndX-divScan.frameletStartX)+
+     (divScan.frameletEndY-divScan.frameletStartY)*(divScan.frameletEndY-divScan.frameletStartY));
+   let tg=(divScan.frameletEndY-divScan.frameletStartY)/(divScan.frameletEndX-divScan.frameletStartX);
+   if(divScan.frameletStartX<divScan.frameletEndX) framelet.phi=Math.atan(tg);
+   else if (divScan.frameletStartX>divScan.frameletEndX) framelet.phi=Math.atan(tg)+Math.PI;
+   else if(divScan.frameletStartX==divScan.frameletEndX) {
+    if(divScan.frameletStartY<divScan.frameletEndY) framelet.phi=Math.PI/2; else framelet.phi=-Math.PI/2; 
+  }
+  framelet.phi=framelet.phi*180/Math.PI;
+    
+  framelet.style.position="absolute";
+  framelet.style.display="flex";
+  framelet.style.border=`${bw1} solid blue`;
+  
+  framelet.style.borderRadius="3px"; 
+  framelet.style.left=divScan.frameletStartX+"px"; 
+  framelet.style.top=divScan.frameletStartY+"px"; 
+  framelet.style.width=d+"px";
+    
+  if(asPrev && (frameletA.length>1) && frameletA[frameletA.length-2] && 
+    (frameletA[frameletA.length-2].offsetHeight>0))
+    framelet.style.height=frameletA[frameletA.length-2].style.height;
+  else framelet.style.height=frameHeight+"px"; 
+  if(!framelet.style.height) alert("framelet.style.height="+framelet.style.height+", frameletA.length="+
+    frameletA.length+", frameHeight="+frameHeight+", asPrev="+asPrev);
+  framelet2.style.height=framelet.style.height;
+  
+  if(fontAsPrev && (frameletA.length>1) && frameletA[frameletA.length-2])
+    framelet.p.scaleY=frameletA[frameletA.length-2].p.scaleY;
+  else framelet.p.scaleY=fontHeight;
+  
+  
+  framelet.style.verticalAlign="bottom";
+  framelet.p.innerText='';//'транскрипт';
+  framelet.t2="";
+  framelet.curAngle=divScan.curAngle;
+  framelet.dSw=dSw;
+  framelet.dSh=dSh;
+  framelet.scaleScan=divScan.scale;
+  framelet.scaleX=1;
+  framelet.scaleY=1;
+  
+  framelet2.p.text=framelet.p.text;
+  framelet2.t2="";
+  //console.log("clickHandler, before addListenersForFramelet: framelet.id=",framelet.id);
+  //addListenersForFramelet();
+  divScan.appendChild(framelet);
+  divTrans.appendChild(framelet2);
+  
+  framelet.style.transformOrigin="left top";
+  framelet.style.transform="rotate("+framelet.phi+"deg)";
+  divScan.newFramelet=false;
+  copyStyles(framelet, framelet2);
+  framelet2.style.border=`${bw1}px solid transparent`;
+  
+  //divTrans.appendChild(trg);
+  //trg.style.width="400px"; trg.style.height="400px";
+  
+  startEd();
+ }
+}
+document.addEventListener("wheel",function(e){e.preventDefault();
+if(curElt.scale==undefined)return;
+let bs, bc;
+curElt.prevScale=curElt.scale;
+if(e.deltaY>0)curElt.scale*=1.05;else curElt.scale/=1.05;
+//correctPosition("scale");
+if(curElt==divScan || curElt==divTrans){ bw1=1/(window.devicePixelRatio*curElt.scale)+"px";
+  for(let j=0;j<frameletA.length;j++) if(frameletA[j]) {
+    frameletA[j].style.borderWidth='0';
+    }
+  for(let j=0;j<frameletA.length;j++) if(frameletA[j]) {
+    bs=getComputedStyle(frameletA[j]).borderStyle;
+	bc=getComputedStyle(frameletA[j]).borderColor;
+	frameletA[j].style.border=`${bw1} ${bs} ${bc}`;//borderWidth=bw1;
+	frameletA[j].style.setProperty('border-width',`${bw1}`,'important');
+    framelet2A[j].style.borderWidth=bw1; 
+	if(framelet2A[j].style.borderColor!='red') framelet2A[j].style.borderColor='transparent';
+	}
+ }
+correctPosition("scale"); 
+},{passive:false});
+/*
+function correctPosition(trans){
+let p=new DOMPoint(mouseX-curElt.x0,mouseY-curElt.y0);
+let mPrev;
+if(trans=="scale") 
+ mPrev=new DOMMatrix("translate("+curElt.tx+"px,"+curElt.ty+"px) scale("+curElt.prevScale+
+ ") rotate("+curElt.curAngle + "deg)");
+else
+ mPrev=new DOMMatrix("translate("+curElt.tx+"px,"+curElt.ty+"px) scale("+curElt.scale+
+ ") rotate("+curElt.prevAngle + "deg)"); 
+
+let m=new DOMMatrix("translate("+curElt.tx+"px,"+curElt.ty+"px) scale("+curElt.scale+
+") rotate("+curElt.curAngle+"deg)");
+let q=p.matrixTransform(mPrev.inverse()).matrixTransform(m);
+curElt.tx+=p.x-q.x;curElt.ty+=p.y-q.y;
+curElt.style.transform=
+"translate("+curElt.tx+"px," + curElt.ty + "px) scale("+curElt.scale+") rotate("+curElt.curAngle+"deg)";
+}
+*/
+function correctPosition(trans){
+let p, mCur, mPar, mRes, mPrev;
+if(curElt.parentNode.x0) 
+  mPar=new DOMMatrix('translate(' + curElt.parentNode.tx+'px,'+curElt.parentNode.ty+'px) scale(' +
+    curElt.parentNode.scale+') rotate(' + curElt.parentNode.curAngle+'deg)'); 
+  //mPar=new DOMMatrix('scale(' + curElt.parentNode.scale+')'); 
+  
+  else mPar=new DOMMatrix();
+p=new DOMPoint(mouseX-curElt.x0,mouseY-curElt.y0); 
+
+if(trans=="scale")
+mPrev=new DOMMatrix("translate("+curElt.tx+"px,"+curElt.ty+"px) scale("+curElt.prevScale+
+ ") rotate("+curElt.curAngle + "deg)");
+else
+mPrev=new DOMMatrix("translate("+curElt.tx+"px,"+curElt.ty+"px) scale("+curElt.scale+
+") rotate("+curElt.prevAngle + "deg)");
+mCur=new DOMMatrix("translate("+curElt.tx+"px,"+curElt.ty+"px) scale("+curElt.scale+
+") rotate("+curElt.curAngle+"deg)");
+
+mPrev=mPar.multiply(mPrev);//mPrev.multiply(mParent);
+mCur=mPar.multiply(mCur); //m.multiply(mParent); 
+
+let q=p.matrixTransform(mPrev.inverse()).matrixTransform(mCur);
+
+
+curElt.tx+=p.x-q.x;curElt.ty+=p.y-q.y;
+//q=new DOMPoint(curElt.tx,curElt.ty).matrixTransform(mPar);
+//curElt.tx=q.x; curElt.ty=q.y;
+
+curElt.style.transform=new DOMMatrix("translate("+curElt.tx+"px," + curElt.ty + "px) scale("+curElt.scale+
+") rotate("+curElt.curAngle+"deg)"); //.multiply(mPar.inverse());
+}
+
+
+
+function rotateClockWise(e) {
+  //e.preventDefault();
+  divScan.prevAngle=divScan.curAngle; divTrans.prevAngle=divTrans.prevAngle;
+  divScan.curAngle+=1; divTrans.curAngle+=1;
+  applyTransforms(divScan,"rot");
+  applyTransforms(divTrans,"rot");
+};
+
+function rotateCounterClockWise(e) {
+  //e.preventDefault();
+  divScan.prevAngle=divScan.curAngle; divTrans.prevAngle=divTrans.prevAngle;
+  divScan.curAngle-=1; divTrans.curAngle-=1;
+  applyTransforms(divScan,"rot");
+  applyTransforms(divTrans,"rot");
+    
+};
+
+/*
+function startDrag(e) {
+if(txt.contains(e.target)||txt2.contains(e.target)||e.target.className=="edBtn"){
+  e.stopPropagation();
+  Ed.dragFlag=false;
+  return;
+}
+
+if(e.currentTarget!=divScan && e.currentTarget!=divTrans && e.currentTarget!=Ed && e.target!=imgFrag && e.target!=divInnerForScanFrag) return;
+e.preventDefault();
+//console.log("startDrag: e.currentTarget.id=", e.currentTarget.id, ", e.target=", e.target);
+e.currentTarget.dragFlag=true; e.currentTarget.startX=e.clientX; e.currentTarget.startY=e.clientY;
+e.currentTarget.style.cursor="pointer";
+e.stopPropagation();
+}
+
+
+function endDrag(e) {
+if(e.currentTarget!=divScan && e.currentTarget!=divTrans && e.currentTarget!=Ed && e.currentTarget!=imgFrag &&
+e.currentTarget!=divInnerForScanFrag) return;
+ e.currentTarget.dragFlag=false; e.currentTarget.style.cursor="auto";
+}
+*/
+function dragging(e){
+if(e.target==txt) {Ed.dragFlag=false;e.stopPropagation(); return;}
+if(e.target!=divScan && e.target!=divTrans && e.target!=Ed && e.target!=imgFrag
+&& e.target!=divInnerForScanFrag && e.target!=divForScanFrag) return;
+e.preventDefault();
+if(laser.style.display=="block") {
+if(e.target.id=="divScan") {
+  divTrans.appendChild(laser);
+  if(!divTrans.scale) divTrans.scale=1;
+  if(!curPhi) curPhi=0;
+  } 
+else if(e.target.id=="divTrans") {
+  divScan.appendChild(laser);
+  if(!divScan.scale) divScan.scale=1;
+  if(!curPhi) curPhi=0;
+  } 
+laser.style.left=e.offsetX+"px"; laser.style.top=e.offsetY+"px";
+} 
+}
+
+function insertSymbolAtCursor(s) {
+    //console.log("insertSymbol started: c=", s);
+	    
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+	//console.log("selection.rangeCount=",selection.rangeCount);
+    const range = selection.getRangeAt(0);
+
+    // Вставка символа в позицию курсора
+    range.deleteContents();
+    const textNode = document.createTextNode(s);
+    range.insertNode(textNode);
+    
+    // Перемещение курсора после вставленного символа
+    range.setStartAfter(textNode);
+    range.setEndAfter(textNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    //if(framelet) console.log("insertSymbol finishes: framelet.id=", framelet.id);
+}
+
+function applyStyle(command, value) {
+  //console.log("applyStyle started: command=", command, ", value=", value);
+  const selection = window.getSelection();
+  //console.log("applyStyle: selection.rangeCount=", selection.rangeCount);
+  if (!selection.rangeCount) return;
+            
+  const range = selection.getRangeAt(0);
+  const span = document.createElement('span');
+  //console.log("applyStyle: range=",range);          
+  if (command === 'line-through') {
+     span.style.textDecoration="line-through"
+    } else if (command === 'italic') {
+     span.style.fontStyle = 'italic';
+    } else if (command === 'normal') {
+     span.style.fontStyle='normal';
+    } else if (command === 'underline') {
+     span.style.textDecoration = 'underline';
+	 span.style.textDecorationStyle="dashed";
+	} else if (command==='overline') {
+	 span.style.textDecoration='overline'
+	} 
+	else if (command === 'foreColor') {
+     span.style.color = value;
+    } else if (command === 'backColor') {
+      span.style.backgroundColor = value;
+    } else if(command==='none'){
+	  span.style.textDecoration='none';
+	  span.style.textDecorationLine='';
+	  span.style.textDecoration='';
+	  document.execCommand('underline', false, null);
+	  //document.execCommand('overline', false, null);
+	  //document.execCommand('line-through', false, null);
+	}
+  range.surroundContents(span);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  framelet.p.innerHTML=txt.innerHTML;
+  framelet2.p.innerHTML=txt.innerHTML;
+  //console.log("applyStyle finishes: framelet.id=", framelet.id);
+}
+
+//shiftUp=gi("shiftUp");
+
+function setHandlersForEdButtons(){
+shiftUp.addEventListener("mousedown",shiftUpFun);
+function shiftUpFun(e) {
+e.preventDefault();
+shiftUp.t=setInterval(
+function() {
+if (parseInt(framelet.style.top)>1) {
+  if(shiftUp.t){
+  framelet.style.top=parseInt(framelet.style.top)-1+"px"; 
+  framelet2.style.top=framelet.style.top;
+  Ed.frameletForFrag.style.top=framelet.style.top;
+  divInnerForScanFrag.style.top=-(parseFloat(framelet.style.top)-30)+"px";
+  }
+}
+},100);
+shiftUp.style.backgroundColor="fuchsia";
+}
+
+
+shiftUp.addEventListener("mouseup",function(e){clearInterval(shiftUp.t);shiftUp.t=null;
+//divInnerForScanFrag.style.top=-(parseFloat(framelet.style.top)-30)+"px";
+shiftUp.style.backgroundColor="white";
+});
+shiftUp.addEventListener("mouseleave", function(e) {clearInterval(shiftUp.t);shiftUp.t=null;
+shiftUp.style.backgroundColor="white";
+});
+
+shiftLeft=gi("shiftLeft");
+
+shiftLeft.addEventListener("mousedown",shiftLeftFun);
+function shiftLeftFun(e) {
+e.preventDefault();
+shiftLeft.t=setInterval(function(){
+if(parseInt(framelet.style.left)>0) 
+ { if(shiftLeft.t){
+   framelet.style.left=parseInt(framelet.style.left)-1+"px";framelet2.style.left=framelet.style.left;
+   Ed.frameletForFrag.style.left=framelet.style.left;
+   divInnerForScanFrag.style.left=-(parseFloat(framelet.style.left)-30)+"px";
+   }
+ }
+},100);
+shiftLeft.style.backgroundColor="fuchsia";
+}
+
+shiftLeft.addEventListener("mouseup",function(e){clearInterval(shiftLeft.t);shiftLeft.t=null;
+shiftLeft.style.backgroundColor="white";
+});
+shiftLeft.addEventListener("mouseleave",function(e){
+clearInterval(shiftLeft.t);shiftLeft.t=null;
+shiftLeft.style.backgroundColor="white";
+});
+
+shiftRight=gi("shiftRight");
+
+shiftRight.addEventListener("mousedown",shiftRightFun);
+function shiftRightFun(e) {
+e.preventDefault();
+shiftRight.t=setInterval(function(){
+  //console.log(framelet.style.left,window.getComputedStyle(divScan).width);
+  if(shiftRight.t){
+  if(parseInt(framelet.style.left)<parseInt(window.getComputedStyle(divScan).width)) 
+  {framelet.style.left=parseInt(framelet.style.left)+1+"px";framelet2.style.left=framelet.style.left;}
+   Ed.frameletForFrag.style.left=framelet.style.left;
+   divInnerForScanFrag.style.left=-(parseFloat(framelet.style.left)-30)+"px";
+   }   
+  },100);
+shiftRight.style.backgroundColor="fuchsia";  
+}
+
+shiftRight.addEventListener("mouseup",function(e){clearInterval(shiftRight.t);shiftRight.t=null;
+shiftRight.style.backgroundColor="white";
+});
+	
+shiftRight.addEventListener("mouseleave",function(e){clearInterval(shiftRight.t);shiftRight.t=null;
+shiftRight.style.backgroundColor="white";
+});
+
+shiftDown=gi("shiftDown");
+
+shiftDown.addEventListener("mousedown",shiftDownFun);
+function shiftDownFun(e) {
+e.preventDefault();
+shiftDown.t=setInterval(function(){
+  if(shiftDown.t){
+  if(parseInt(framelet.style.top)<parseInt(window.getComputedStyle(divScan).height)) 
+  {framelet.style.top=parseInt(framelet.style.top)+1+"px";framelet2.style.top=framelet.style.top;
+   Ed.frameletForFrag.style.top=framelet.style.top;
+   divInnerForScanFrag.style.top=-(parseFloat(framelet.style.top)-30)+"px"; 
+  }
+  }
+  },100);
+shiftDown.style.backgroundColor="fuchsia";
+}
+
+shiftDown.addEventListener("mouseup",function(e){clearInterval(shiftDown.t);shiftDown.t=null;
+shiftDown.style.backgroundColor="white";
+});
+shiftDown.addEventListener("mouseleave",function(e){
+clearInterval(shiftDown.t);shiftDown.t=null;
+shiftDown.style.backgroundColor="white";
+});
+
+heightUp=gi("heightUp");
+heightUp.addEventListener("mousedown",heightUpFun);
+function heightUpFun(e) {
+e.preventDefault();
+//console.log("heightUpFun started: framelet.style.height=",framelet.style.height);
+heightUp.t=setInterval(function() {
+  if(heightUp.t){
+  if(parseInt(framelet.style.height)<parseInt(window.getComputedStyle(divScan).height)) 
+    {framelet.style.height=parseInt(framelet.style.height)+1+"px";framelet2.style.height=framelet.style.height;
+     Ed.frameletForFrag.style.height=framelet.style.height;
+    }
+   }
+  },100);
+heightUp.style.backgroundColor="fuchsia";
+}
+
+heightUp.addEventListener("mouseup",function(e){clearInterval(heightUp.t);heightUp.t=null;
+ //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+ //fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+ 
+heightUp.style.backgroundColor="white";
+});
+heightUp.addEventListener("mouseleave",function(e){clearInterval(heightUp.t);heightUp.t=null;
+  //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+  //fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+heightUp.style.backgroundColor="white";
+});
+
+widthLeft=gi("widthLeft");
+
+widthLeft.addEventListener("mousedown",widthLeftFun);
+function widthLeftFun(e) {
+e.preventDefault();
+widthLeft.t=setInterval(function(){
+  if(widthLeft.t){
+  if(parseInt(framelet.style.width)>1) 
+  {framelet.style.width=parseInt(framelet.style.width)-1+"px";framelet2.style.width=framelet.style.width;
+   Ed.frameletForFrag.style.width=framelet.style.width;
+   //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+   //fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+  }
+  }
+  },100);
+widthLeft.style.backgroundColor="fuchsia";
+}
+
+widthLeft.addEventListener("mouseup",function(e){clearInterval(widthLeft.t);widthLeft.t=null;
+//fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+//fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+widthLeft.style.backgroundColor="white";
+});
+widthLeft.addEventListener("mouseleave",function(e){clearInterval(widthLeft.t);widthLeft.t=null;
+//fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+//fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+widthLeft.style.backgroundColor="white";
+});
+
+widthRight=gi("widthRight");
+widthRight.addEventListener("mousedown",widthRightFun);
+function widthRightFun(e) {
+e.preventDefault();
+widthRight.t=setInterval(function(){
+  if(widthRight.t){
+  if(parseInt(framelet.style.width)<parseInt(window.getComputedStyle(divScan).width)) 
+  {framelet.style.width=parseInt(framelet.style.width)+1+"px";framelet2.style.width=framelet.style.width;
+   Ed.frameletForFrag.style.width=framelet.style.width;
+  }
+  }
+  },100);
+widthRight.style.backgroundColor="fuchsia";
+}
+
+widthRight.addEventListener("mouseup",function(e){clearInterval(widthRight.t);
+widthRight.t=null;
+//fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+//fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+widthRight.style.backgroundColor="white";
+});
+
+widthRight.addEventListener("mouseleave",function(e){clearInterval(widthRight.t); widthRight.t=null;
+//fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+//fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+widthRight.style.backgroundColor="white";
+});
+
+heightDown=gi("heightDown");
+
+heightDown.addEventListener("mousedown",heightDownFun);
+function heightDownFun(e) {
+e.preventDefault();
+heightDown.t=setInterval(function(){
+  if(heightDown.t){
+  if(parseInt(framelet.style.height)>1) 
+  {framelet.style.height=parseInt(framelet.style.height)-1+"px";framelet2.style.height=framelet.style.height;
+   Ed.frameletForFrag.style.height=framelet.style.height;
+   
+   }
+   //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p); 
+   //fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+  }
+  },100);
+heightDown.style.backgroundColor="fuchsia";
+}
+
+heightDown.addEventListener("mouseup",function(e){clearInterval(heightDown.t); heightDown.t=null;
+  //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+  //fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+heightDown.style.backgroundColor="white";
+});
+heightDown.addEventListener("mouseleave",function(e){clearInterval(heightDown.t); heightDown.t=null;
+  //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+  //fitTextToContainer(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+heightDown.style.backgroundColor="white";
+});
+
+scaleUp=gi("scaleUp");
+scaleUp.addEventListener("mousedown",scaleUpFun);
+function scaleUpFun(e) {
+e.preventDefault();
+scaleUp.t=setInterval(function(){
+if(scaleUp.t){
+framelet.p.style.transformOrigin="left top";
+framelet2.p.style.transformOrigin="left top";
+Ed.frameletForFrag.p.style.transformOrigin="left top";
+if(!framelet.p.scaleX) framelet.p.scaleX=1; if(!framelet.p.scaleY) framelet.p.scaleY=1;
+if(!Ed.frameletForFrag.p.scaleX) Ed.frameletForFrag.p.scaleX=1; 
+if(!Ed.frameletForFrag.p.scaleY)Ed.frameletForFrag.p.scaleY=1;
+framelet.p.scaleY*=1.05; 
+{framelet.p.style.transform="scale(" + framelet.p.scaleX+"," + framelet.p.scaleY+")";
+ framelet2.p.style.transform=framelet.p.style.transform;
+ Ed.frameletForFrag.p.style.transform=framelet.p.style.transform;
+ //console.log("scaleUp: framelet.p.style.transform=", framelet.p.style.transform);
+}
+const height = framelet.p.getBoundingClientRect().height;
+// Установка высоты абзаца в значение фактической высоты текста
+//framelet.p.style.height = height + 'px';
+}
+},100);
+//console.log("transform: ", framelet.p.style.transform);
+scaleUp.style.backgroundColor="fuchsia";
+}
+scaleUp.addEventListener("mouseup",function(e){clearInterval(scaleUp.t); scaleUp.t=null;
+scaleUp.style.backgroundColor="white";
+
+});
+scaleUp.addEventListener("mouseleave",function(e){clearInterval(scaleUp.t); scaleUp.t=null;
+scaleUp.style.backgroundColor="white";
+});
+
+scaleLeft=gi("scaleLeft");
+scaleLeft.addEventListener("mousedown",scaleLeftFun);
+function scaleLeftFun(e) {
+e.preventDefault();
+scaleLeft.t=setInterval(function(){
+if(scaleLeft.t){
+if(!framelet.p.scaleX) framelet.p.scaleX=1; if(!framelet.p.scaleY) framelet.p.scaleY=1;
+framelet.p.scaleX*=1/1.05;
+{framelet.p.style.transform="scale(" + framelet.p.scaleX+"," + framelet.p.scaleY+")";
+ framelet2.p.style.transform=framelet.p.style.transform;
+ Ed.frameletForFrag.p.style.transform=framelet.p.style.transform;
+}
+}
+},100);
+scaleLeft.style.backgroundColor="fuchsia";
+}
+scaleLeft.addEventListener("mouseup",function(e){clearInterval(scaleLeft.t); scaleLeft.t=null;
+scaleLeft.style.backgroundColor="white";
+});
+scaleLeft.addEventListener("mouseleave",function(e){clearInterval(scaleLeft.t); scaleLeft.t=null;
+scaleLeft.style.backgroundColor="white";
+});
+
+scaleRight=gi("scaleRight");
+scaleRight.addEventListener("mousedown",scaleRightFun);
+function scaleRightFun(e) {
+e.preventDefault();
+scaleRight.t=setInterval(function(){
+if(scaleRight.t){
+if(!framelet.p.scaleX) framelet.p.scaleX=1; if(!framelet.p.scaleY) framelet.p.scaleY=1;
+framelet.p.scaleX*=1.05;
+{framelet.p.style.transform="scale(" + framelet.p.scaleX+"," + framelet.p.scaleY+")";
+ framelet2.p.style.transform=framelet.p.style.transform;
+ Ed.frameletForFrag.p.style.transform=framelet.p.style.transform;
+ }
+ }
+},100);
+scaleRight.style.backgroundColor="fuchsia";
+}
+scaleRight.addEventListener("mouseup",function(e){clearInterval(scaleRight.t); scaleRight.t=null;
+scaleRight.style.backgroundColor="white";
+});
+scaleRight.addEventListener("mouseleave",function(e){clearInterval(scaleRight.t); scaleRight.t=null;
+scaleRight.style.backgroundColor="white";
+});
+
+scaleDown=gi("scaleDown");
+scaleDown.addEventListener("mousedown",scaleDownFun);
+function scaleDownFun(e) {
+e.preventDefault();
+scaleDown.t=setInterval(function(){
+if(scaleDown.t){
+if(!framelet.p.scaleX) framelet.p.scaleX=1; if(!framelet.p.scaleY) framelet.p.scaleY=1;
+framelet.p.scaleY/=1.05; 
+{framelet.p.style.transform="scale(" + framelet.p.scaleX+"," + framelet.p.scaleY+")";
+framelet2.p.style.transform=framelet.p.style.transform;
+Ed.frameletForFrag.p.style.transform=framelet.p.style.transform;
+}
+}
+},100);
+//console.log("transform: ", framelet.p.style.transform);
+scaleDown.style.backgroundColor="fuchsia";
+}
+scaleDown.addEventListener("mouseup",function(e){clearInterval(scaleDown.t);scaleDown.t=null;
+scaleDown.style.backgroundColor="white";
+});
+scaleDown.addEventListener("mouseleave",function(e){clearInterval(scaleDown.t);scaleDown.t=null;
+scaleDown.style.backgroundColor="white";
+});
+
+rotateLeft=gi("rotateLeft");
+rotateLeft.addEventListener("mousedown",rotateLeftFun);
+function rotateLeftFun(e){
+e.preventDefault();
+rotateLeft.t=setInterval(function(){
+if(rotateLeft.t){
+if(!framelet.phi) framelet.phi=0;
+framelet.phi-=1;
+framelet.style.transform="rotate(" + framelet.phi + "deg)";
+framelet2.style.transform=framelet.style.transform;
+Ed.frameletForFrag.style.transform=framelet.style.transform;
+divInnerForScanFrag.curAngle=-framelet.phi;
+if(!divInnerForScanFrag.scale)divInnerForScanFrag.scale=1;
+divInnerForScanFrag.style.transformOrigin=framelet.style.left+" " + framelet.style.top;
+divInnerForScanFrag.style.transform="scale("+divInnerForScanFrag.scale+") rotate("+divInnerForScanFrag.curAngle+"deg)";
+}
+},100);
+rotateLeft.style.backgroundColor="fuchsia";
+}
+rotateLeft.addEventListener("mouseup",function(e){clearInterval(rotateLeft.t);rotateLeft.t=null;
+rotateLeft.style.backgroundColor="white";
+});
+rotateLeft.addEventListener("mouseleave",function(e){clearInterval(rotateLeft.t);rotateLeft.t=null;
+rotateLeft.style.backgroundColor="white";
+});
+
+rotateRight=gi("rotateRight");
+rotateRight.addEventListener("mousedown",rotateRightFun);
+function rotateRightFun(e){
+e.preventDefault();
+rotateRight.t=setInterval(function(){
+if(rotateRight.t){
+if(!framelet.phi) framelet.phi=0;
+framelet.phi+=1;
+framelet.style.transform="rotate(" + framelet.phi + "deg)";
+framelet2.style.transform=framelet.style.transform;
+Ed.frameletForFrag.style.transform=framelet.style.transform;
+divInnerForScanFrag.curAngle=-framelet.phi;
+if(!divInnerForScanFrag.scale)divInnerForScanFrag.scale=1;
+divInnerForScanFrag.style.transformOrigin=framelet.style.left+" " + framelet.style.top;
+divInnerForScanFrag.style.transform="scale(" + divInnerForScanFrag.scale + ") rotate(" + divInnerForScanFrag.curAngle + "deg)";
+}
+},100);
+rotateRight.style.backgroundColor="fuchsia";
+}
+rotateRight.addEventListener("mouseup",function(e){clearInterval(rotateRight.t);rotateRight.t=null;
+rotateRight.style.backgroundColor="white";
+});
+rotateRight.addEventListener("mouseleave",function(e){clearInterval(rotateRight.t);rotateRight.t=null;
+rotateRight.style.backgroundColor="white";
+});
+
+weightLeft=gi("weightLeft");
+weightLeft.addEventListener("mousedown",weightLeftFun);
+function weightLeftFun(e){
+e.preventDefault();
+weightLeft.t=setInterval(function(){
+if(weightLeft.t){
+if(!framelet.style.fontWeight) framelet.style.fontWeight="600";
+if(parseFloat(framelet.style.fontWeight)>50) 
+  framelet.style.fontWeight=parseFloat(framelet.style.fontWeight)-10+"";
+framelet2.style.fontWeight=framelet.style.fontWeight;
+Ed.frameletForFrag.style.fontWeight=framelet.style.fontWeight;
+}
+},100);
+weightLeft.style.backgroundColor="fuchsia";
+}
+weightLeft.addEventListener("mouseup",function(e){clearInterval(weightLeft.t);weightLeft.t=null;
+weightLeft.style.backgroundColor="white";
+});
+weightLeft.addEventListener("mouseleave",function(e){clearInterval(weightLeft.t);weightLeft.t=null;
+weightLeft.style.backgroundColor="white";
+});
+
+weightRight=gi("weightRight");
+weightRight.addEventListener("mousedown",weightRightFun);
+function weightRightFun(e){
+e.preventDefault();
+weightRight.t=setInterval(function(){
+if(weightRight.t){
+if(!framelet.style.fontWeight) framelet.style.fontWeight="600";
+if(parseFloat(framelet.style.fontWeight)<1500) 
+  framelet.style.fontWeight=parseFloat(framelet.style.fontWeight)+10+"";
+framelet2.style.fontWeight=framelet.style.fontWeight;
+Ed.frameletForFrag.style.fontWeight=framelet.style.fontWeight;
+//console.log("weightRightFun: fontWeight=",framelet.style.fontWeight);
+}
+},100);
+weightRight.style.backgroundColor="fuchsia";
+}
+weightRight.addEventListener("mouseup",function(e){clearInterval(weightRight.t);weightRight.t=null;
+weightRight.style.backgroundColor="white";
+});
+weightRight.addEventListener("mouseleave",function(e){clearInterval(weightRight.t);weightRight.t=null;
+weightRight.style.backgroundColor="white";
+});
+
+
+opacityLeft=gi("opacityLeft");
+opacityLeft.addEventListener("mousedown",opacityLeftFun);
+function opacityLeftFun(e){
+e.preventDefault();
+opacityLeft.t=setInterval(function(){
+if(opacityLeft.t){
+if(framelet.alpha>=0.05) framelet.alpha-=0.05;
+framelet.p.style.color="rgba(0,0,0,"+framelet.alpha+")";
+framelet2.p.style.color=framelet.p.style.color;
+Ed.frameletForFrag.p.style.color=framelet.p.style.color;
+//console.log("weightRightFun: fontWeight=",framelet.style.fontWeight);
+}
+},100);
+opacityLeft.style.backgroundColor="fuchsia";
+}
+opacityLeft.addEventListener("mouseup",function(e){clearInterval(opacityLeft.t);opacityLeft.t=null;
+opacityLeft.style.backgroundColor="white";
+});
+opacityLeft.addEventListener("mouseleave",function(e){clearInterval(opacityLeft.t);opacityLeft.t=null;
+opacityLeft.style.backgroundColor="white";
+});
+
+opacityRight=gi("opacityRight");
+opacityRight.addEventListener("mousedown",opacityRightFun);
+function opacityRightFun(e){
+e.preventDefault();
+opacityRight.t=setInterval(function(){
+if(opacityRight.t){
+if(framelet.alpha<=0.95) framelet.alpha+=0.05;
+framelet.p.style.color="rgba(0,0,0,"+framelet.alpha+")";
+framelet2.p.style.color=framelet.p.style.color;
+Ed.frameletForFrag.p.style.color=framelet.p.style.color;
+//console.log("weightRightFun: fontWeight=",framelet.style.fontWeight);
+}
+},100);
+opacityRight.style.backgroundColor="fuchsia";
+}
+opacityRight.addEventListener("mouseup",function(e){clearInterval(opacityRight.t);opacityRight.t=null;
+opacityRight.style.backgroundColor="white";
+});
+opacityRight.addEventListener("mouseleave",function(e){clearInterval(opacityRight.t);opacityRight.t=null;
+opacityRight.style.backgroundColor="white";
+});
+
+apply=gi("apply");
+apply.addEventListener("click", function(e) {Ed.style.display="none";framelet2.p.innerHTML=framelet.p.innerHTML;
+Ed.framelet=undefined;
+});
+
+} //setHandlersForEdButtons()
+
+
+function copyStyles(source, target) {
+  const sourceStyles = window.getComputedStyle(source);
+  for (const style of sourceStyles) {
+    target.style.setProperty(style, sourceStyles.getPropertyValue(style), sourceStyles.getPropertyPriority(style));
+  }
+} //copyStyles
+
+function startEd() {
+Ed.framelet=framelet;
+framelet.style.border=`${bw1} solid blue`;
+txt.innerHTML=framelet.p.innerHTML;  
+txt2.innerHTML=framelet.t2;
+imgFrag.src=imgScan.src;
+imgFrag.style.width=imgScan.offsetWidth+"px";
+imgFrag.style.height=imgScan.offsetHeight+"px";
+
+divInnerForScanFrag.style.width=imgFrag.style.width;
+divInnerForScanFrag.style.height=imgFrag.style.height;
+imgFrag.style.left="0px";
+imgFrag.style.top="0px";
+divInnerForScanFrag.style.left=-parseFloat(framelet.style.left)+50+"px";
+divInnerForScanFrag.style.top=-parseFloat(framelet.style.top)+50+"px";
+if(!divInnerForScanFrag.scale)divInnerForScanFrag.scale=4;
+divInnerForScanFrag.style.transformOrigin=framelet.style.left+" " + framelet.style.top;
+
+divInnerForScanFrag.style.transform="scale("+divInnerForScanFrag.scale+") rotate(" +(-framelet.phi)+"deg)";
+divInnerForScanFrag.curAngle=-framelet.phi;  
+
+
+if(Ed.frameletForFrag)Ed.frameletForFrag.remove(); //style.borderWidth="0";
+ 
+Ed.frameletForFrag=document.createElement("div");
+Ed.frameletForFrag.className="frameletClass";
+Ed.frameletForFrag.style.transformOrigin="left top";
+
+Ed.frameletForFrag.p=document.createElement("p");
+Ed.frameletForFrag.p.style.transformOrigin=framelet.p.style.transformOrigin;
+Ed.frameletForFrag.p.className="fp";
+
+Ed.frameletForFrag.appendChild(Ed.frameletForFrag.p);
+divInnerForScanFrag.appendChild(Ed.frameletForFrag);
+Ed.frameletForFrag.style.left=framelet.style.left;
+Ed.frameletForFrag.style.top=framelet.style.top;
+Ed.frameletForFrag.style.width=framelet.style.width;
+Ed.frameletForFrag.style.height=framelet.style.height;
+Ed.frameletForFrag.style.transformOrigin=framelet.style.transformOrigin;
+Ed.frameletForFrag.style.transform=framelet.style.transform;
+Ed.frameletForFrag.style.border=`${bw1} solid blue`;
+Ed.frameletForFrag.p.innerHTML=framelet.p.innerHTML;
+Ed.frameletForFrag.p.style.transformOrigin=framelet.p.style.transformOrigin;
+Ed.frameletForFrag.p.style.transform=framelet.p.style.transform;
+Ed.frameletForFrag.style.border=framelet.style.border;
+/*
+Ed.frameletForFrag.p.style.fontSize="20px";
+Ed.frameletForFrag.p.style.fontWeight="bold";
+Ed.frameletForFrag.p.style.fontFamily="Arial";
+*/
+
+Ed.style.display="block";
+}
+/*
+function addListenersForFramelet() { 
+for(let j=0;(j<frameletA.length) && frameletA[j];j++) { 
+  if(!frameletA[j]) continue;
+  let elt=frameletA[j];
+  if(!elt.mouseenter){
+    //console.log("j=",j,", elt.mouseenter=", elt.mouseenter);
+  
+  elt.addEventListener("mouseenter",function(e) {
+    //console.log("framelet.mouseenter: e.target.id=", e.target.id);
+	if(borderVisibility=="focused"||borderVisibility=="always")
+	  e.target.style.border=`${bw1} solid blue`;
+    else e.target.style.border=`${bw1} solid transparent`;
+	if(!elt.phi) elt.phi=0; curPhi=elt.phi;
+	//console.log("curPhi=",curPhi);
+	if(laserFrame) {elt.style.border="1px solid red"; 
+	  let k=frameletA.indexOf(elt); framelet2A[k].style.border="1px solid red";
+	}
+	frltContent.innerText=elt.p.innerText; 
+  });
+  elt.mouseenter=1;  	
+  } //else {console.log("j=",j,", elt.mouseenter=", elt.mouseenter);}
+		  
+  if(!elt.mouseleave){
+  elt.addEventListener("mouseleave",function(e) {
+  //console.log("framelet.mouseleave: e.target.id=",e.target.id);
+  if(elt!=Ed.framelet && borderVisibility!="always") e.target.style.borderColor="transparent";
+  if(elt==Ed.framelet) e.target.style.border=`${bw1} solid blue`;
+  if(elt!=Ed.framelet && borderVisibility=="always") e.target.style.border=`${bw1} solid blue`;  
+  if(laserFrame){let k; 
+  elt.style.border="1px solid transparent";
+  k=frameletA.indexOf(elt); 
+    if(k) { 
+      frameletA[k].style.border="1px solid transparent"; framelet2A[k].style.border="1px solid transparent";
+	 }
+  }  
+  frltContent.innerText="";  
+});
+  elt.mouseleave=1;
+  } //else elt.mouseleave=1;
+		  
+  if(!elt.mousedown){		  
+  elt.addEventListener("mousedown",function(e){ 
+   e.preventDefault();		  
+  });
+  elt.mousedown=1;
+  } //else elt.mousedown=1;
+		  
+  if(!elt.mouseup){
+  elt.addEventListener("mouseup",function(e) {
+   e.preventDefault();
+  });
+  elt.mouseup=1;
+  }// else elt.mouseup=1;
+		  
+  if(!elt.mousemove){
+  elt.addEventListener("mousemove",function(e){ 
+   e.preventDefault();
+  }); 
+  elt.mousemove=1;
+  } //else elt.mousemove=1;
+
+  if(!elt.wheel){
+  elt.addEventListener("wheel", function(e){
+		    //console.log("elt wheel handler");
+			e.preventDefault();
+  });
+  elt.wheel=1;
+  } //else elt.wheel=1;
+  if(!elt.p.wheel){
+  elt.p.addEventListener("wheel",function(e){
+    //console.log("wheel elt.id=", elt.id, ", e.target.tagName=",e.target.tagName);
+    e.preventDefault();
+    
+	return;
+  });	
+  elt.p.wheel=1;
+  } //else elt.p.wheel=1;  
+		  
+  if(!elt.dblclick){
+  elt.addEventListener("dblclick", function(e){
+  e.preventDefault();
+  //console.log("dblclick.started, framelet.id=", framelet.id);
+  //framelet.style.borderWidth="0px";
+  if(e.target.className=="frameletClass") framelet=e.target;
+  else if (e.target.parentNode.className=="frameletClass") framelet=e.target.parentNode;
+  else if(e.target.parentNode.parentNode.className=="frameletClass") framelet=e.target.parentNode.parentNode;
+  else if(e.target.parentNode.parentNode.parentNode.className=="frameletClass") 
+    framelet=e.target.parentNode.parentNode.parentNode;
+  else alert("Не определяется framelet");
+  Ed.framelet=framelet;
+  let k=frameletA.indexOf(framelet);
+  //console.log("dblclick after target determination: k=", k, "e.target.parentNode.id=", e.target.parentNode.id,
+  //", framelet.id=", framelet.id);
+  framelet2=framelet2A[k];
+  //console.log("dblclick before txt: framelet.id=", framelet.id);
+  txt.innerHTML=framelet.p.innerHTML; 
+  if(framelet.t2) txt2.innerHTML=framelet.t2; else txt2.innerHTML="";
+  //console.log("dblclick after txt: e.target.id=", e.target.id, ", e.target.parentNode.id=", e.target.parentNode.id,
+  //", framelet.id=", framelet.id);
+  framelet.style.border=`${bw1} solid blue`;
+  startEd();
+  });
+  elt.dblclick=1;
+  } //else elt.dblclick=1;
+  } //cycle on frameletA
+} //addListenersForFramelet
+*/
+function drawGrid(elt){
+let dx=15, w=parseInt(window.getComputedStyle(elt).width), h=parseInt(window.getComputedStyle(elt).height);
+for(let j=1;j*dx<=h;j++){
+let l=document.createElement("div");
+l.className="gridLineH";
+l.style.left="0px";
+l.style.top=j*dx+"px";
+elt.appendChild(l);
+}
+for(let j=1;j*dx<=w;j++){
+let l=document.createElement("div");
+l.className="gridLineV";
+l.style.left=j*dx+"px";
+l.style.top="0px";
+elt.appendChild(l);
+}
+
+}
+function changeScanWidth() {
+  //console.log("changeWidth started: scan.style.width=", scan.style.width, ", trans.style.width=", trans.style.width);
+  divScan.style.transformOrigin="left top";
+  divScan.left=divScan.offsetLeft*100/scan.offsetWidth+"%";
+  divScan.top=divScan.offsetTop*100/scan.offsetHeight+"%";
+  if(!scan.fullWidthFlag) {
+    scan.style.width="100%";
+	trans.style.zIndex=0;
+	scan.style.zIndex=1;
+    scan.fullWidthFlag=true;
+	divScan.scale=2;
+    //fullWidthBtn.innerHTML="В пол-экрана";
+  } else {
+    scan.style.width="50%"; 
+	trans.style.zIndex=1;
+	//fullWidthBtn.innerHTML="Во всю ширину"; 
+	scan.fullWidthFlag=false;
+	divScan.scale=1;
+  }
+  
+  divScan.style.transform=`scale(${divScan.scale})`;
+  imgScan.style.height="";
+  imgScan.style.width=divScan.style.width;
+  divScan.style.left=divScan.left;
+  divScan.style.top=divScan.top;
+}
+
+function changeTransWidth() {
+  divTrans.style.transformOrigin="left top";
+  
+  divTrans.left=divTrans.offsetLeft*100/trans.offsetWidth+"%";
+  divTrans.top=divTrans.offsetTop*100/trans.offsetHeight+"%";
+  if(!trans.fullWidthFlag) {
+    trans.style.width="100%";
+	trans.style.left="2px";
+	scan.style.zIndex=0;
+	trans.style.zIndex=1;
+    trans.fullWidthFlag=true;
+    divTrans.scale=2;	
+	//fullWidthBtn.innerHTML="В пол-экрана";
+  } else {
+    trans.style.width="50%";
+    trans.style.left="50%";	
+	scan.style.zIndex=1;
+	divTrans.scale=1;
+	//fullWidthBtn.innerHTML="Во всю ширину"; 
+	trans.fullWidthFlag=false;
+  }
+  divTrans.style.transform=`scale(${divTrans.scale})`;
+  divTrans.style.left=divTrans.left;
+  divTrans.style.top=divTrans.top;   
+}
+
+ 
+function saveTrans() {
+   for(let j=0; j<frameletA.length;j++){
+      let f=frameletA[j], f2=framelet2A[j];
+	  if(!f || !f.parentNode) continue;
+	  let fk=Object.keys(f), f2k=Object.keys(f2);
+	  if(fk.length!=f2k.length) console.log("Different number of properties: frid=", f.id, ", fr2id=", f2.id,
+	    ", L1=", fk.length, ", L2=", f2k.length);
+	  for(let k of fk) {if (f[k]!=f2[k]) console.log("Different properties: frid=", f.id, ", fr2id=", f2.id,
+       ", k=", k, "f[k]=", f[k], ", f2[k]=", f2[k])};
+      	   
+   }
+   dSw=pF(getComputedStyle(divScan).width);
+   dSh=pF(getComputedStyle(divScan).height);
+   for(let j=0; j<frameletA.length; j++) {
+       if(!frameletA[j] || !frameletA[j].parentNode) { 
+	     delete frameletA[j]; delete framelet2A[j]; continue;
+	    }	 
+	   frameletA[j].width=frameletA[j].style.width;
+	   frameletA[j].height=frameletA[j].style.height;
+	   frameletA[j].left=frameletA[j].style.left;
+	   frameletA[j].top=frameletA[j].style.top;
+	   frameletA[j].scaleX=frameletA[j].p.scaleX;
+	   frameletA[j].scaleY=frameletA[j].p.scaleY;
+       frameletA[j].t=frameletA[j].p.innerHTML;
+	   frameletA[j].font=frameletA[j].p.style.font;
+	   
+	   frameletA[j].wR=pF(frameletA[j].style.width)/dSw;
+	   frameletA[j].hR=pF(frameletA[j].style.height)/dSh;
+	   frameletA[j].lR=pF(frameletA[j].style.left)/dSw;
+	   frameletA[j].tR=pF(frameletA[j].style.top)/dSh;
+	   
+	   frameletA[j].dSw=dSw;
+	   frameletA[j].dSh=dSh;
+	   if(frameletA[j].img) { frameletA[j].style.zIndex=0; framelet2A[j].style.zIndex=0;}
+	   else {frameletA[j].style.zIndex=1; framelet2A[j].style.zIndex=1;}
+	 }
+   //if(json) console.log("before stringify: json.length=",json.length);	 
+   json = JSON.stringify(frameletA);
+   //console.log("after stringify: json.length=",json.length);
+   const blob = new Blob([json], { type: 'application/json' });
+   const url = URL.createObjectURL(blob);
+   const a = document.createElement('a');
+   a.href = url;
+   a.download = 'data.json';
+   document.body.appendChild(a);
+   a.click();
+   document.body.removeChild(a);
+   URL.revokeObjectURL(url);
+}; 
+
+function frameletCreation() {
+if(framelet) framelet.style.border=`${bw1}px solid transparent`;
+for(let j=0;j<frameletA.length;j++){if(frameletA[j]) frameletA[j].style.border=`${bw1}px solid transparent`;}
+framelet=document.createElement("div");
+framelet2=document.createElement("div");
+framelet2.style.boxSizing="borderBox";
+
+framelet.img=0; framelet2.img=0;
+frameletA.push(framelet);
+framelet2A.push(framelet2);
+
+framelet2.addEventListener("mouseenter", function(e){
+  curPhi=frameletA[framelet2A.indexOf(e.target)].phi;
+  //console.log("framelet2 mouseenter; framelet2.t2=",framelet2.t2);
+  let k=framelet2A.indexOf(e.target);
+  framelet2=framelet2A[k];
+  if(framelet2A[k].t2>' ') {tooltip.style.display="block";tooltip.innerHTML=framelet2A[k].t2;} else  tooltip.style.display="none";
+  if(laserFrame) {
+    e.target.style.border="1px solid red";
+	   //alert("k="+k+", j="+j);
+	 frameletA[k].style.border="1px solid red";
+	  }
+});
+framelet2.addEventListener("mouseleave", function(e){
+  e.target.style.border=`${bw1}px solid transparent`;
+  let k=framelet2A.indexOf(e.target);
+  frameletA[k].style.border=`${bw1}px solid transparent`; 
+  //console.log("framelet2 mouseleave: k=", k);
+});
+
+framelet.className="frameletClass";
+framelet2.className="frameletClass";
+framelet.idx=frameletA.indexOf(framelet);
+framelet2.idx=framelet2A.indexOf(framelet2);
+framelet.id="frid"+framelet.idx;
+framelet2.id="fr2id"+framelet2.idx;
+framelet.style.pointerEvents="auto";
+framelet2.style.pointerEvents="auto";
+
+framelet.p=document.createElement("span");
+framelet.p.className="fp";
+
+framelet.p.style.pointerEvents="auto";
+     
+framelet2.p=document.createElement("span");
+
+framelet2.p.style.pointerEvents="auto";
+
+framelet.alpha=1;
+framelet2.alpha=1;
+framelet.p.style.color="rgba(0,0,0,1)";
+framelet2.p.style.color=framelet.p.style.color;
+
+framelet2.p.className="fp";   
+framelet.appendChild(framelet.p);
+framelet2.appendChild(framelet2.p);
+
+framelet.style.transformOrigin="left top";
+framelet2.style.transformOrigin="left top";    
+
+framelet.p.style.transformOrigin="left top";
+framelet2.p.style.transformOrigin="left top";
+framelet.p.scaleX=1; framelet.p.scaleY=1;
+framelet2.p.scaleX=1; framelet2.p.scaleY=1;
+   
+if(hideBtn.textContent=="Показать кальку") framelet.p.style.display="none";
+else framelet.p.style.display="block";
+}
+
+function fillTrans() {
+hideBtn.textContent="Скрыть кальку";
+stopLaserBtn.innerHTML="Включить лазерную указку";
+laser.style.display="none";
+frameletA.splice(0, frameletA.length);
+framelet2A.splice(0, framelet2A.length);
+dSw=undefined, dSh=undefined;
+for(let j=0;j<json.length;j++) {
+  if(!json[j]) continue;
+  if(json[j].dSw) dSw=parseFloat(json[j].dSw); if(json[j].dSh) dSh=parseFloat(json[j].dSh);
+  }
+if(!dSw || !dSh) { alert("Не были сохранены размеры исходного изображения. Загрузка невозможна"); return}
+
+divScan.scale=dSw0/dSw;divScan.prevScale=divScan.scale;
+divTrans.scale=divScan.scale;divTrans.prevScale=divTrans.scale;
+//divScan.style.width=dSw+"px"; divScan.style.height=dSh+"px";
+let tw=pF(getComputedStyle(divScan).width),
+  th=pF(getComputedStyle(divScan).height);
+divTrans.style.width=getComputedStyle(divScan).width; 
+divTrans.style.height=getComputedStyle(divScan).height;
+//imgScan.style.width=divScan.style.width;
+divScan.curAngle=0; divScan.prevAngle=0;
+divTrans.curAngle=0; divTrans.prevAngle=0;
+//divScan.scale=1;divScan.prevScale=1;
+//divTrans.scale=1;divTrans.prevScale=1;
+divScan.tx=0;divScan.ty=0;divTrans.tx=0;divTrans.ty=0;
+divScan.style.transform="scale("+divScan.scale+")"; divTrans.style.transform=divScan.style.transform;
+
+if(Math.abs(imgScan.width/imgScan.height - dSw/dSh)/(imgScan.width/imgScan.height)>0.05) {
+  alert("Отношение размеров оригинала больше, чем на 5% отличается от отношения размеров сохранённой транскрипции. "+
+     "Для оригинала: " + (imgScan.width/imgScan.height).toFixed(2) + ", для транскрипции: " + 
+	 (dSw/dSh).toFixed(2) + " Возможны большие искажения") 
+}
+
+for(let j=0;j<json.length;j++){ 
+     if(!json[j]) continue;
+	 if(json[j].scaleX!=json[j].p.scaleX) 
+       console.log("idx=",json[j].idx,", scaleX=", json[j].scaleX, ", json[j].p.scaleX=",json[j].p.scaleX);
+	 if(json[j].scaleY!=json[j].p.scaleY)
+	   console.log("idx=",json[j].idx,", scaleY=", json[j].scaleY, ", json[j].p.scaleY=",json[j].p.scaleY);
+	 if (!json[j].lR) 
+	   console.log("idx=",json[j].idx,", json[j].lR=", json[j].lR);
+     if (!json[j].tR) 
+	   console.log("idx=",json[j].idx,", json[j].tR=", json[j].tR);
+	 if(!json[j].wR)
+       console.log("idx=",json[j].idx,", json[j].wR=", json[j].wR);
+     if(!json[j].hR)
+       console.log("idx=",json[j].idx,", json[j].hR=", json[j].hR);
+	 //if(!json[j].t)
+	 //  console.log("idx=",json[j].idx, ", t=", json[j].t);
+	}
+let cw=1, ch=1;
+for(let j=0; j<json.length; j++) {
+   if(json[j] && (json[j].wR || json[j].width)) {
+   frameletCreation();
+   framelet.style.border=`${bw1} solid blue`;
+   
+   framelet.curAngle=json[j].curAngle;
+   
+   divScan.appendChild(framelet);
+   
+   framelet.scaleScan=json[j].scaleScan;
+   
+   if(json[j].lR) framelet.style.left=cw*json[j].lR*tw + "px";
+   else framelet.style.left=pF(json[j].left)*tw/dSw +"px";
+   
+   if(json[j].tR) framelet.style.top=ch*json[j].tR*th+"px"
+   else framelet.style.top=pF(json[j].top)*th/dSh+"px";
+   
+   if(json[j].wR) framelet.style.width=cw*json[j].wR*tw+"px";
+   else framelet.style.width=pF(json[j].width)*tw/dSw+"px";
+   
+   if(json[j].hR) framelet.style.height=ch*json[j].hR*th+"px";
+   else framelet.style.height=pF(json[j].height)*th/dSh+"px";
+   
+   framelet2.scaleScan=json[j].scaleScan;
+   framelet2.style.left=framelet.style.left;//json[j].left;
+   framelet2.style.top=framelet.style.top;
+   framelet2.style.width=framelet.style.width;
+   framelet2.style.height=framelet.style.height;
+   framelet2.style.border=`${bw1}px solid transparent`;
+   
+   divTrans.appendChild(framelet2);
+   
+   if(!json[j].phi) framelet.phi=0;
+   else framelet.phi=json[j].phi;
+   framelet2.phi=framelet.phi;
+   
+   if(json[j].fSz) framelet.style.fontSize=json[j].fSz;
+   
+   if(!json[j].scaleX) framelet.p.scaleX=1;
+   else framelet.p.scaleX=json[j].scaleX;
+   
+   if(!json[j].scaleY) framelet.p.scaleY=1;
+   else framelet.p.scaleY=json[j].scaleY;
+   
+   if(!json[j].scaleX) framelet.scaleX=1; else framelet.scaleX=json[j].scaleX;
+   if(!json[j].scaleY) framelet.scaleY=1; else framelet.scaleY=json[j].scaleY;
+   framelet2.scaleX=framelet.scaleX; framelet2.scaleY=framelet.scaleY;
+   
+   framelet.p.innerHTML=json[j].t;
+   framelet2.p.innerHTML=json[j].t;
+   framelet.t=json[j].t;
+   framelet2.t=json[j].t;
+   framelet.t2=json[j].t2;
+   framelet2.t2=json[j].t2;
+   
+   framelet.img=json[j].img;
+   framelet2.img=json[j].img;
+   
+   if(framelet.img) {framelet.style.zIndex=0;framelet2.style.zIndex=0;}
+   else {framelet.style.zIndex=1;framelet2.style.zIndex=1;}
+   
+   if(framelet.img) setBg(framelet2);
+   /*
+   fit(framelet,framelet.p); fit(framelet2,framelet2.p);
+   framelet.p.style.transform="scaleX(" + framelet.p.scaleX +") scaleY(" + framelet.p.scaleY + ")";
+   framelet2.p.style.transform=framelet.p.style.transform;
+   */
+   framelet.style.transform="rotate(" + framelet.phi + "deg)";
+   framelet2.style.transform=framelet.style.transform;
+   
+   //framelet.p.innerHTML=json[j].t;
+   //framelet2.p.innerHTML=json[j].t;
+   
+   //addListenersForFramelet();
+   
+   //fit(framelet,framelet.p); fit(framelet2,framelet2.p);
+   resizeText(framelet,framelet.p); resizeText(framelet2,framelet2.p);
+   //fitTextToContainer(framelet,framelet.p); fitTextToContainer(framelet2,framelet2.p);
+   framelet.style.opacity=1;framelet2.style.opacity=1;
+}
+}
+console.log("fillTrans ended. divTrans.childNodes.length=", divTrans.childNodes.length);
+} //fillTrans
+
+function creaBtn(t,tn,j,k){
+  let d=document.createElement('div');
+  d.className="edBtn";
+  d.tabindex="-1";
+  d.style.width=btnW+"px";
+  d.style.height=btnH+"px";
+  
+  Ed.appendChild(d);
+  //d.addEventListener("focus",(e)=>{txt.focus()});
+  if(j) d.style.left=Ed.xStart+j*(btnW+5)+"px";
+  else d.style.left=Ed.xStart+"px";
+  if(k) d.style.top=Ed.yStart+k*btnH+"px";
+  else d.style.top=Ed.yStart+"px";
+  d.id=tn;
+  d.innerText=t;
+  
+  if(tn=="YLetter") {
+    d.addEventListener('click',function() {insertSymbolAtCursor(cYLetter)});
+  } else if(tn=='yLetter') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cyLetter));
+  } else if(tn=='ThetaLetter') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cThetaLetter));
+  } else if(tn=='thetaLetter') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cthetaLetter));
+  } else if(tn=='IghLetter') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cIghLetter));
+  } else if(tn=='ighLetter') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cighLetter));
+  } else if(tn=='dash') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cdash));
+  } else if(tn=='whiteSquare') {
+    d.addEventListener('click',(e)=>insertSymbolAtCursor(cwhiteSquare));
+  } else if(tn=="lineThrough"){
+    d.style.textDecoration="line-through";
+	d.addEventListener("click", (e)=>{e.preventDefault(); applyStyle('line-through');});
+  }
+  else if(tn=="underLine"){
+    d.style.textDecoration="underline";
+	d.addEventListener("click", (e)=>{e.preventDefault();applyStyle('underline')});
+  }
+  else if(tn=="overLine"){
+    d.style.textDecoration="overline";
+	overLine=gi("overLine");
+	d.addEventListener("click", (e)=>applyStyle('overline'));
+  }
+  else if(tn=="ital"){
+    d.style.fontStyle="italic";
+	ital=gi("ital");
+	d.addEventListener("click", (e)=>applyStyle('italic'));
+  }
+  else if(tn=="black"){
+    d.style.color="black";
+	d.addEventListener("click", (e)=>applyStyle('foreСolor','black'));
+  }
+  else if(tn=="lightblue"){
+    d.style.color="lightblue";
+	d.addEventListener("click",(e)=>applyStyle('foreColor','lightblue'));
+  }
+  else if(tn=="red"){
+    d.style.color="red";
+	d.addEventListener("click",(e)=>applyStyle('foreColor','red'));
+  }
+  else if(tn=="bgYellow"){
+    d.style.backgroundColor="yellow";
+	d.addEventListener("click",(e)=>applyStyle('backColor','yellow'));
+  }
+  else if(tn=="bgLightblue"){
+    d.style.backgroundColor="lightblue";
+	d.addEventListener("click",(e)=>applyStyle('backColor','lightblue'));
+  }
+  else if(tn=="reset"){
+    d.style.textDecoration="none";
+	d.addEventListener("click", (e)=>applyStyle('none'));
+	d.addEventListener("click", (e)=>applyStyle('normal'));
+  }
+  else if(tn=="Fit"){
+    d.addEventListener("click",fitBtnClick);
+	/*
+	(e)=>{
+	framelet.p.innerHTML=txt.innerHTML;
+    framelet.p.style.left="0px"; framelet.p.style.top="0px";
+    framelet2.p.innerHTML=framelet.p.innerHTML;
+    Ed.frameletForFrag.p.style.margin="0px";
+    Ed.frameletForFrag.p.style.padding="0px";
+    Ed.frameletForFrag.p.style.left="0px";
+    Ed.frameletForFrag.p.style.top="0px";
+    Ed.frameletForFrag.p.style.width=framelet.p.style.width;
+    Ed.frameletForFrag.p.style.height=framelet.p.style.height;
+    Ed.frameletForFrag.p.innerHTML=framelet.p.innerHTML;
+	addListenersForFramelet();
+	fitAll()});
+	*/
+  }
+  else if(tn=="Del"){
+    
+	d.addEventListener("click",(e)=>{
+	//console.log("Del: framelet.id=", framelet.id);
+	let j=frameletA.indexOf(framelet);
+	divScan.removeChild(framelet);
+	divTrans.removeChild(framelet2);
+	divInnerForScanFrag.removeChild(Ed.frameletForFrag);
+	}
+  );
+  }
+} //creaBtn()
+
+function creaEd(){
+  
+  let cheightUp=String.fromCharCode(9650),cwidthLeft=String.fromCharCode(9668), 
+  cwidthRight=String.fromCharCode(9658),cheightDown=String.fromCharCode(9660),
+  
+  cscaleUp=String.fromCharCode(9650),cscaleLeft=String.fromCharCode(9668), 
+  cscaleRight=String.fromCharCode(9658),cscaleDown=String.fromCharCode(9660),
+  crotateRight=String.fromCharCode(8635), crotateLeft=String.fromCharCode(8634),
+  cvisibleSpace=String.fromCharCode(9251);
+  
+  let tA=[cYLetter,cyLetter,cThetaLetter,cthetaLetter,cIghLetter,cighLetter,cdash,cwhiteSquare,"З","П","Н","К",
+    cshiftUp,cshiftLeft,cshiftRight,cshiftDown, cheightUp,cwidthLeft,cwidthRight,cheightDown,
+	cscaleUp,cscaleLeft,cscaleRight,cscaleDown,crotateLeft,crotateRight],
+    tnA=["YLetter","yLetter","ThetaLetter","thetaLetter","IghLetter","ighLetter","dash","whiteSquare",
+	  "lineThrough","underLine","overLine","ital","shiftLeft","shiftRight","shiftUp","shiftDown",
+	  "widthLeft","widthRight","heightUp","heightDown","scaleLeft","scaleRight","scaleUp","scaleDown",
+	  "rotateLeft","rotateRight"];
+  
+  Ed=document.createElement("div");
+  Ed.style.overflow='hidden';
+  Ed.style.position="absolute";
+  Ed.style.zIndex=10;
+  Ed.xStart=5; Ed.yStart=5;  
+  Ed.style.width=0.5*W+2*Ed.xStart+"px";
+  
+  Ed.scale=1;Ed.prevScale=1;Ed.curAngle=0;Ed.prevAngle=0;
+  let rr=Ed.getBoundingClientRect();
+  Ed.x0=rr.x;Ed.y0=rr.y;Ed.tx=0;Ed.ty=0;
+  Ed.style.transform="";
+  
+  divForScanFrag=document.createElement("div");
+  divForScanFrag.id="divForScanFrag";
+  
+  divForScanFrag.style.width=(parseInt(Ed.style.width)-2*Ed.xStart)+"px";
+  divForScanFrag.style.height="100px";
+  divForScanFrag.style.position="absolute";
+  Ed.appendChild(divForScanFrag);
+  divForScanFrag.style.left=Ed.xStart+"px";
+  divForScanFrag.style.top=Ed.yStart+"px";
+  divForScanFrag.style.border="1px solid black";
+  divForScanFrag.style.borderRadius="5px";
+  divForScanFrag.style.overflow="hidden";
+  
+  divInnerForScanFrag=document.createElement("div");
+  divInnerForScanFrag.style.position="absolute";
+  divInnerForScanFrag.id="divInnerForScanFrag";
+  divInnerForScanFrag.scale=1;divInnerForScanFrag.prevScale=1;
+  divInnerForScanFrag.curAngle=0;divInnerForScanFrag.prevAngle=0;
+  divInnerForScanFrag.tx=0;divInnerForScanFrag.ty=0;
+  rr=divInnerForScanFrag.getBoundingClientRect();
+  divInnerForScanFrag.x0=rr.x;divInnerForScanFrag.y0=rr.y;
+  //divInnerForScanFrag.style.opacity=1;
+  //divInnerForScanFrag.style.zIndex=1;
+  
+  imgFrag=document.createElement("img");
+  imgFrag.style.position="absolute";
+  imgFrag.style.pointerEvents='none';
+  imgFrag.draggable=false;
+  //imgFrag.style.zIndex=0;
+  
+  divInnerForScanFrag.appendChild(imgFrag);
+  divForScanFrag.appendChild(divInnerForScanFrag);
+  /*
+  divInnerForScanFrag.addEventListener("mousedown",startDrag);
+  divInnerForScanFrag.addEventListener("mouseup",endDrag);
+  divInnerForScanFrag.addEventListener("mouseleave",endDrag);
+  divInnerForScanFrag.addEventListener("mousemove",dragging);
+  //divInnerForScanFrag.addEventListener("wheel",scaleElt);
+  divInnerForScanFrag.addEventListener("click",clickHandler);
+  */
+  txt=document.createElement("div");
+  txt2=document.createElement("div");
+  txt.id="txt";
+  txt2.id="txt2";
+  txt.style.position="absolute";
+  txt.style.boxSizing="borderBox";
+  txt.spellcheck=false;
+  txt.style.width=parseInt(Ed.style.width)-2*Ed.xStart+"px";
+  txt.style.height=2*btnH+"px";
+  txt.style.left=Ed.xStart+"px";
+  
+  txt2.style.position="absolute";
+  txt2.style.boxSizing="borderBox";
+  txt2.spellcheck=false;
+  txt2.style.width=txt.style.width;
+  txt2.style.height=5*btnH+"px";
+  txt2.style.left=txt.style.left;
+  
+  Ed.yStart=Ed.yStart+parseInt(divForScanFrag.style.height);
+  txt.style.top=Ed.yStart+5+"px";
+  txt.style.border="1px solid black";
+  txt.style.borderRadius="5px";
+  txt.contentEditable=true;
+  //txt.style.resize="none";  
+  txt.style.backgroundColor="white";
+  txt.style.fontSize="20px";
+  txt.style.fontWeight="bold";
+  txt.style.fontFamily="Arial";
+  txt.style.padding="3px";
+  txt.style.zIndex=10;
+  Ed.appendChild(txt);
+  
+  txt2.style.top=pI(txt.style.top)+pI(txt.style.height)+3+"px";//txt.offsetTop+txt.offsetHeight+3+"px"; //Ed.yStart+5+btnH+"px";
+  txt2.style.border="1px solid black";
+  txt2.style.borderRadius="5px";
+  txt2.contentEditable=true;
+  //txt.style.resize="none";  
+  txt2.style.backgroundColor="white";
+  txt2.style.fontSize="20px";
+  txt2.style.fontWeight="bold";
+  txt2.style.fontFamily="Arial";
+  txt2.style.padding="3px";
+  txt2.style.zIndex=10;
+  Ed.appendChild(txt2);
+  
+  txt.addEventListener("click",function(e){e.stopPropagation();document.activeElement.blur();
+    txt2.canBlur=true; txt.canBlur=false; txt.focus();
+    //console.log("txt clicked, activeElement=",document.activeElement);
+	});
+  txt2.addEventListener("click",function(e){e.stopPropagation(); document.activeElement.blur;
+    txt.canBlur=true; txt2.canBlur=false; txt2.focus();
+    //console.log("txt2 clicked, activeElement=",document.activeElement);
+	});
+  
+  txt.addEventListener("blur", function(event) {
+    	//event.preventDefault(); 
+    //console.log("txt blur, target=", event.target,"currentTarget=",event.currentTarget);		
+	if(!txt.canBlur) txt.focus();
+  });
+  
+  txt2.addEventListener("blur", function(event) {
+    	//event.preventDefault(); 
+	//console.log("txt2 blur, target=", event.target,"currentTarget=",event.currentTarget)	
+	if(!txt2.canBlur) txt2.focus();
+  });
+  
+  Ed.yStart=parseInt(txt.style.top)+parseInt(txt.style.height)+parseInt(txt2.style.height)+5;
+  
+  Ed.style.height=H/2+2*(btnH+5)+"px";
+  Ed.style.border="2px solid black";
+  Ed.style.borderRadius="5px";
+  document.body.appendChild(Ed);
+  Ed.style.backgroundColor="#ccc";
+  Ed.style.resize="both";
+  Ed.style.overflow="auto";
+  Ed.id="Ed";
+  Ed.style.left=W/2+"px";
+  Ed.style.top="200px";
+  
+  for(let j=0;j<12;j++){
+    creaBtn(tA[j],tnA[j],j,0);
+  }
+  Ed.yStart=Ed.yStart+btnH+5;
+  creaBtn("А","black",0,0);
+  creaBtn("А","lightblue",1,0);
+  creaBtn("А","red",2,0);
+  creaBtn("А","bgYellow",3,0);
+  creaBtn("А","bgLightblue",4,0);
+  creaBtn("X","reset",5,0);
+  creaBtn("Fit","Fit",6,0);
+  creaBtn("Del","Del",7,0);
+  
+  //Номер слоя
+  let d=document.createElement('div');
+  d.className="edBtn";
+  d.tabindex="-1";
+  d.style.width=2*btnW+"px";
+  d.style.height=btnH+"px";
+  d.style.left=gi("Del").offsetLeft+btnW+10+"px";
+  d.style.top=gi("Del").offsetTop+"px";
+  Ed.appendChild(d);
+  d.style.border="0 solid blue";
+  d.innerHTML="№ слоя";
+  
+  layer=document.createElement('div');
+  layer.className="edBtn";
+  //d.tabindex="-1";
+  layer.style.width=btnW+"px";
+  layer.style.height=btnH+"px";
+  layer.style.left=gi("Del").offsetLeft+3*btnW+15+"px";
+  layer.style.top=gi("Del").offsetTop+"px";
+  Ed.appendChild(layer);
+  layer.id="layer";
+  layer.сontentEditable='true';
+  layer.style.border="0 solid blue";
+  layer.innerHTML="1";
+  
+  
+  /*
+  let d=document.createElement("div");
+  d.style.position="absolute";
+  d.style.left=Ed.xStart+6*(btnW+5)+"px";
+  d.style.top=Ed.yStart+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  d.innerText="Наложить транскрипт на скан";
+  Ed.appendChild(d);
+  */
+  
+  Ed.yStart=Ed.yStart+btnH+5;
+  d=document.createElement("div");
+  d.style.position="absolute";
+  d.style.left=Ed.xStart+"px";
+  //Ed.yStart=Ed.yStart+btnH+10;
+  d.style.top=Ed.yStart+"px";
+  d.style.width=Ed.offsetWidth-btnW+"px";
+  d.style.height=btnH+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  Ed.appendChild(d);
+  d.innerText="Сдвиги"; //"Shift-стрелки - cдвиги, Ctrl-стрелки размеры, Alt-3 и Alt-4 - повороты рамки";
+  //Ed.yStart=Ed.yStart+btnH+5;
+  
+  d=document.createElement("div");
+  d.style.position="absolute";
+  let thetaLetter=gi("thetaLetter");
+  d.style.left=thetaLetter.style.left;
+  d.style.top=Ed.yStart+"px";
+  d.style.width=btnW*2+5+"px";
+  d.style.height=btnH+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  Ed.appendChild(d);
+  d.innerText="Размеры";
+  
+  d=document.createElement("div");
+  d.style.position="absolute";
+  dash=gi("dash");
+  d.style.left=dash.style.left;
+  d.style.top=Ed.yStart+"px";
+  d.style.width=btnW*2+5+"px";
+  d.style.height=btnH+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  Ed.appendChild(d);
+  d.innerText="Шрифт";
+  
+  d=document.createElement("div");
+  d.style.position="absolute";
+  underLine=gi("underLine");
+  d.style.left=underLine.style.left;
+  d.style.top=Ed.yStart+"px";
+  d.style.width=btnW*2+5+"px";
+  d.style.height=btnH+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  Ed.appendChild(d);
+  d.innerText="Повороты";
+  
+  
+  Ed.yStart=Ed.yStart+btnH+5;
+  Ed.xStart=5;
+  
+  creaBtn(cshiftUp,"shiftUp");
+  shiftUp=gi("shiftUp");
+  shiftUp.style.left=Ed.xStart+0.5*btnW+"px";
+  shiftUp.style.top=Ed.yStart+"px";
+  
+  creaBtn(cshiftLeft,"shiftLeft");
+  shiftLeft=gi("shiftLeft");
+  shiftLeft.style.left=Ed.xStart+"px";
+  shiftLeft.style.top=Ed.yStart+btnH+5+"px";
+  
+  creaBtn(cshiftRight,"shiftRight");
+  shiftRight=gi("shiftRight");
+  shiftRight.style.left=5+btnW+5+"px";
+  shiftRight.style.top=shiftLeft.style.top;
+  
+  creaBtn(cshiftDown,"shiftDown");
+  shiftDown=gi("shiftDown");
+  shiftDown.style.left=shiftUp.style.left;
+  shiftDown.style.top=Ed.yStart+btnH+5+btnH+5+"px";
+  
+  Ed.xStart=5+3*(btnW+5);
+  creaBtn(cheightUp,"heightUp");
+  heightUp=gi("heightUp");
+  heightUp.style.left=Ed.xStart+0.5*btnW+"px";
+  heightUp.style.top=Ed.yStart+"px";
+  
+  creaBtn(cwidthLeft,"widthLeft");
+  widthLeft=gi("widthLeft");
+  widthLeft.style.left=Ed.xStart+"px";
+  widthLeft.style.top=Ed.yStart+btnH+5+"px";
+  
+  creaBtn(cwidthRight,"widthRight");
+  widthRight=gi("widthRight");
+  widthRight.style.left=Ed.xStart+btnW+5+"px";
+  widthRight.style.top=widthLeft.style.top;
+  
+  creaBtn(cheightDown,"heightDown");
+  heightDown=gi("heightDown");
+  heightDown.style.left=heightUp.style.left;
+  heightDown.style.top=Ed.yStart+btnH+5+btnH+5+"px";
+  
+  Ed.xStart=5+6*(btnW+5);
+  creaBtn(cscaleUp,"scaleUp");
+  scaleUp=gi("scaleUp");
+  scaleUp.style.left=Ed.xStart+0.5*btnW+"px";
+  scaleUp.style.top=Ed.yStart+"px";
+  
+  creaBtn(cscaleLeft,"scaleLeft");
+  scaleLeft=gi("scaleLeft");
+  scaleLeft.style.left=Ed.xStart+"px";
+  scaleLeft.style.top=Ed.yStart+btnH+5+"px";
+  
+  creaBtn(cscaleRight,"scaleRight");
+  scaleRight=gi("scaleRight");
+  scaleRight.style.left=Ed.xStart+btnW+5+"px";
+  scaleRight.style.top=widthLeft.style.top;
+  
+  creaBtn(cscaleDown,"scaleDown");
+  scaleDown=gi("scaleDown");
+  scaleDown.style.left=scaleUp.style.left;
+  scaleDown.style.top=Ed.yStart+btnH+5+btnH+5+"px";
+  
+  Ed.xStart=5+9*(btnW+5);
+  creaBtn(crotateLeft,"rotateLeft");
+  rotateLeft=gi("rotateLeft");
+  rotateLeft.style.left=Ed.xStart+"px";
+  rotateLeft.style.top=Ed.yStart+"px";
+  
+  creaBtn(crotateRight,"rotateRight");
+  rotateRight=gi("rotateRight");
+  rotateRight.style.left=Ed.xStart+btnW+5+"px";
+  rotateRight.style.top=Ed.yStart+"px";
+  
+  Ed.yStart=Ed.yStart+btnH+5;
+  d=document.createElement("div");
+  d.style.position="absolute";
+  underLine=gi("underLine");
+  d.style.left=underLine.style.left;
+  d.style.top=Ed.yStart+"px";
+  d.style.width=btnW*2+5+"px";
+  d.style.height=btnH+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  Ed.appendChild(d);
+  d.innerText="Жирность";
+  Ed.yStart=Ed.yStart+btnH+5;
+  
+  creaBtn(cscaleLeft,"weightLeft");
+  weightLeft=gi("weightLeft");
+  weightLeft.style.left=underLine.style.left;
+  weightLeft.style.top=Ed.yStart+"px";
+  
+  creaBtn(cscaleRight,"weightRight");
+  weightRight=gi("weightRight");
+  weightRight.style.left=overLine.style.left;
+  weightRight.style.top=weightLeft.style.top;
+  
+  
+  Ed.yStart=Ed.yStart+btnH+5;
+  
+  d=document.createElement("div");
+  d.style.position="absolute";
+  //underLine=gi("underLine");
+  YLetter=gi("YLetter");
+  d.style.left=YLetter.style.left;
+  d.style.top=Ed.yStart+"px";
+  d.style.width=btnW*2+5+"px";
+  d.style.height=btnH+"px";
+  d.style.fontWeight="bold";
+  d.style.fontSize="20px";
+  d.style.fontFamily="Arial";
+  Ed.appendChild(d);
+  d.innerText="Прозрачность:";
+  
+  creaBtn(cscaleLeft,"opacityLeft");
+  opacityLeft=gi("opacityLeft");
+  opacityLeft.style.left=thetaLetter.style.left;
+  opacityLeft.style.top=Ed.yStart+"px";
+  
+  creaBtn(cscaleRight,"opacityRight");
+  opacityRight=gi("opacityRight");
+  opacityRight.style.left=IghLetter.style.left;
+  opacityLeft.style.top=Ed.yStart+"px";
+  
+  creaBtn("Ok","apply");
+  apply=gi("apply");
+  apply.style.left=ital.style.left;
+  apply.style.top=Ed.yStart+"px";
+  
+  apply.addEventListener("click", function(e) {Ed.style.display="none";framelet2.p.innerHTML=framelet.p.innerHTML;
+  Ed.framelet=undefined;
+  });
+  
+  if(Ed.yStart+btnH+5!=parseFloat(Ed.style.height)) Ed.style.height=Ed.yStart+btnH+5+"px";
+  //imgHandling();
+} //creaEd()
+
+function fit(container,textElement){
+textElement.style.transform="none";
+if(!container.scaleX || container.scaleX==1) container.scaleX=container.clientWidth/textElement.scrollWidth;
+if(!container.scaleY || container.scaleY==1) container.scaleY=container.clientHeight/textElement.scrollHeight;
+textElement.style.transform="scale("+container.scaleX+","+container.scaleY+")";
+textElement.style.top="0px";
+}
+function fitAll(){
+//fit(framelet,framelet.p); fit(framelet2,framelet2.p);
+//fit(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+resizeText(framelet,framelet.p); resizeText(framelet2,framelet2.p);
+resizeText(Ed.frameletForFrag,Ed.frameletForFrag.p);
+
+localStorage.setItem('transcript', JSON.stringify(frameletA));
+}
+
+function setFrameProps(){
+frameProps=gi("frameProps");
+frameHeight=gi("frameHeight").value;
+asPrev=gi("asPrev").checked;
+
+fontHeight=gi("fontHeight").value;
+fontAsPrev=gi("fontAsPrev").checked;
+
+borderVisibility="focused";
+
+frameProps.addEventListener("change", (e)=>{
+  //console.log("frameProps, e.target.id=",e.target.id,", e.target.name=",e.target.name,
+  // ", e.target.value=",e.target.value);
+  if(e.target.id=="frameHeight"){frameHeight=e.target.value;
+	}
+  else if(e.target.id=="asPrev")asPrev=e.target.checked;
+  else if(e.target.name=="borderVisibility") {
+  borderVisibility=e.target.value;
+  if(borderVisibility=="always") {
+    for(let j=0;j<frameletA.length;j++) if(frameletA[j]) frameletA[j].style.border=`${bw1} solid blue`;
+  }
+  else for(let j=0;j<frameletA.length;j++) if(frameletA[j]) 
+    frameletA[j].style.border=`${bw1}px solid transparent`;  
+  }
+  else if(e.target.id=="fontHeight") fontHeight=e.target.value;
+  else if(e.target.id=="fontAsPrev") fontAsPrev=e.target.checked;
+  else if(e.target.id=="sincHeight") {
+    sincHeight=e.target.checked;
+	if(sincHeight && framelet){ let h=framelet.style.height;
+      for(let j=0;j<frameletA.length;j++) 
+	    if(frameletA[j]){frameletA[j].style.height=h; fit(frameletA[j],frameletA[j].p);
+		  framelet2A[j].style.height=h; fit(framelet2A[j],framelet2A[j].p);
+		  if(Ed.frameletForFrag) {Ed.frameletForFrag.style.height=framelet.style.height;
+		  fit(Ed.frameletForFrag,Ed.frameletForFrag.p);
+		  }
+		 }
+	 
+   }
+ }
+  else if(e.target.name=="selectPhiRange") {
+  let s=e.target.value;
+  //console.log("s (e.target.value=", s);
+  if(s=="allPhi") {
+    for(let j=0;j<frameletA.length;j++){
+	  if(frameletA[j]) {
+	    //frameletA[j].style.display="block";
+		framelet2A[j].style.display="block";
+		}
+	}
+  } else if(s=="nearHor") {
+    for(let j=0;j<frameletA.length;j++){
+      if(frameletA[j]) {
+	    if(((frameletA[j].phi%360)<=60) && ((frameletA[j].phi%360)>=-60)) {
+		  //frameletA[j].style.display="block";
+		  framelet2A[j].style.display="block";
+		} else {
+		//frameletA[j].style.display="none";
+		framelet2A[j].style.display="none";
+		}
+	  }	
+	}
+  } else if(s=="nearVert"){
+    for(let j=0;j<frameletA.length;j++){
+      if(frameletA[j]) {
+	    if(((frameletA[j].phi%360)>60) || ((frameletA[j].phi%360)<-60)) {
+		  framelet2A[j].style.display="block";
+		} else {
+		framelet2A[j].style.display="none";
+		}
+	  }	
+	}
+  }
+  }
+});
+}
+function delayAsync(dt) {
+  return new Promise(resolve => setTimeout(resolve, dt));
+}
+//async 
+function animationStep(i,j,tA,tF){
+//console.log("animationStep: i=", i, ', j=', j, ", animationDelay=", animationDelay);
+if(j==0) {if(i>0)frameletA[i-1].style.borderColor="transparent";frameletA[i].style.border=`${bw1}px solid red`;}
+
+tA[i].style.left=parseFloat(tA[i].style.left)+1+"px";
+tA[i].style.width=parseFloat(tA[i].style.width)-1+"px";
+if(j==tA[i].tOldWidth) 
+	   tF[i].p.innerHTML=tF[i].p.innerHTML.replaceAll("||","text-decoration: line-through;");
+if(j<tA[i].tOldWidth)j++;
+else {if(i<tF.length-1){i++;j=0;}
+      else 
+        {animationFlag=0; return;
+	    }
+	 }
+divTrans.style.transformOrigin="center center";
+if(!divTrans.scale) divTrans.scale=1;	
+setTimeout(()=>animationStep(i,j,tA,tF),animationDelay);
+}
+function animate(tF){
+let i,j,k,d,ds,f,fs,tA=[],s=0;
+animationFlag=1;
+//console.log("animate started");
+if(!tF) tF=framelet2A;
+for(let i=0;i<tF.length;i++) {
+  tA[i]=document.createElement("div"); 
+  tA[i].tOldWidth=tF[i].offsetWidth;
+  	
+  d=tA[i];ds=d.style;f=tF[i];fs=f.style;
+  ds.left=0;ds.top=0;ds.width=fs.width;ds.height=fs.height;ds.backgroundColor="white";ds.opacity=1;
+  ds.position="absolute";
+  ds.boxSizing="borderBox";
+  f.appendChild(d);
+  
+  if(f.p.innerHTML.includes("line-through")) {
+    f.p.innerHTML=f.p.innerHTML.replaceAll("text-decoration: line-through;","||");
+    //console.log("i=",i,", line-through is replaced, tOldWidth=",tA[i].tOldWidth,", currentWidth=",f.offsetWidth,", f.p.innerHTML=",f.p.innerHTML);
+  }
+  
+  }
+
+animationStep(0,0,tA,tF);
+
+}  
+
+function fitBtnClick(){
+framelet.p.innerHTML=txt.innerHTML;
+framelet.t=txt.innerHTML;
+framelet.p.style.left="0px"; framelet.p.style.top="0px";
+framelet2.p.innerHTML=framelet.p.innerHTML;
+framelet2.t=txt.innerHTML;
+
+if(txt2.innerText>'') { 
+  framelet.t2=txt2.innerHTML; framelet2.t2=txt2.innerHTML;
+  framelet2.title=txt2.innerText;
+  }
+Ed.frameletForFrag.p.style.margin="0px";
+Ed.frameletForFrag.p.style.padding="0px";
+Ed.frameletForFrag.p.style.left="0px";
+Ed.frameletForFrag.p.style.top="0px";
+Ed.frameletForFrag.p.style.width=framelet.p.style.width;
+Ed.frameletForFrag.p.style.height=framelet.p.style.height;
+Ed.frameletForFrag.p.innerHTML=framelet.p.innerHTML;
+//addListenersForFramelet();
+fitAll();
+}	
+
+function resizeText(container,innerSpan) {
+  let containerWidth = container.offsetWidth;
+  let containerHeight = container.offsetHeight;
+  
+  // Create a temporary element to measure text size
+  let tempElement = document.createElement('span');
+  tempElement.style.position = 'absolute';
+  tempElement.style.visibility = 'hidden';
+  tempElement.style.whiteSpace = 'nowrap';
+  document.body.appendChild(tempElement);
+
+  tempElement.innerHTML=innerSpan.innerHTML;
+  let textWidth = tempElement.offsetWidth;
+  let textHeight = tempElement.offsetHeight;
+
+  // Calculate scale factors
+  let scaleX = containerWidth / textWidth;
+  let scaleY = containerHeight / textHeight;
+
+  // Apply the transform
+  innerSpan.style.transform = "scale("+scaleX+","+scaleY+")"; //scale(${scale});
+  innerSpan.style.transformOrigin = 'top left';
+  // Remove the temporary element
+  document.body.removeChild(tempElement);
+  //delete tempElement;
+}
+
+function getStyledLines(element) {
+  const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+  const lines = [];
+
+  const rectMap = new Map();
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+
+    for (let i = 0; i < node.length; i++) {
+      const range = document.createRange();
+      range.setStart(node, i);
+      range.setEnd(node, i + 1);
+
+      const rects = range.getClientRects();
+      for (const rect of rects) {
+        const key = `${Math.round(rect.top)}-${Math.round(rect.height)}`;
+
+        if (!rectMap.has(key)) rectMap.set(key, []);
+        rectMap.get(key).push(range.cloneContents());
+      }
+
+      range.detach();
+    }
+  }
+
+  // Convert document fragments into HTML strings
+  for (const [, fragments] of rectMap) {
+    const container = document.createElement("div");
+    fragments.forEach(frag => container.appendChild(frag));
+    lines.push({
+      html: container.innerHTML,
+      text: container.innerText
+    });
+  }
+
+  // Optional: sort lines by visual order (top to bottom)
+  return lines.sort((a, b) => a.top - b.top);
+}
+function setBg(framelet2){
+const sx = framelet2.offsetLeft;
+const sy = framelet2.offsetTop;
+const sw = framelet2.offsetWidth;
+const sh = framelet2.offsetTop;
+
+// Вырезаем фрагмент с помощью canvas
+const canvas = document.createElement('canvas');
+canvas.style.zIndex=0;
+canvas.width = sw;
+canvas.height = sh;
+const ctx = canvas.getContext('2d');
+
+// Учитываем реальные размеры изображения (масштаб может отличаться)
+const scaleX = imgScan.naturalWidth / imgScan.width;
+const scaleY = imgScan.naturalHeight / imgScan.height;
+
+ctx.drawImage(
+      imgScan,
+      sx * scaleX, sy * scaleY, sw * scaleX, sh * scaleY, // источник
+      0, 0, sw, sh                                        // назначение
+    );
+
+const dataURL = canvas.toDataURL();
+framelet2.style.backgroundImage = `url(${dataURL})`;
+framelet.img=1; framelet2.img=1;
+framelet.style.opacity=0.5;framelet2.style.opacity=0.5;
+}
+
+function setTempDivBg(){
+const sx = tempDiv.offsetLeft;
+const sy = tempDiv.offsetTop;
+const sw = tempDiv.offsetWidth;
+const sh = tempDiv.offsetHeight;
+
+// Вырезаем фрагмент с помощью canvas
+const canvas = document.createElement('canvas');
+canvas.width = sw;
+canvas.height = sh;
+const ctx = canvas.getContext('2d');
+
+// Учитываем реальные размеры изображения (масштаб может отличаться)
+const scaleX = imgScan.naturalWidth / imgScan.width;
+const scaleY = imgScan.naturalHeight / imgScan.height;
+
+ctx.drawImage(
+      imgScan,
+      sx * scaleX, sy * scaleY, sw * scaleX, sh * scaleY, // источник
+      0, 0, sw, sh                                        // назначение
+    );
+
+const dataURL = canvas.toDataURL();
+tempDiv.style.backgroundImage = `url(${dataURL})`;
+//console.log("setTempDivBg: framelet2.id=", framelet2.id, ", sx=",sx,", sw=",sw, ", sy=",sy,",sh=",sh);
+}		
+function writeSeq(e){
+if(!writeSequenceFlag) return;
+const matched = framelet2A.find(el => el.contains(e.target))
+matched.ordNo=++curOrdNo;
+//console.log("writeSeq: matched.id=", matched.id,", ordNo=",curOrdNo,matched.ordNo);  
+}		
+</script>
+</body>
+</html>
